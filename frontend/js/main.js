@@ -27,6 +27,16 @@ function loadTheme() {
   document.documentElement.setAttribute('data-theme', saved);
 }
 
+function updateNavForAuth() {
+  const logoLinks = document.querySelectorAll('.nav-logo');
+  const isLoggedIn = api.isAuthenticated();
+  logoLinks.forEach(link => {
+    if (isLoggedIn && link.getAttribute('href') === '/') {
+      link.setAttribute('href', '/dashboard');
+    }
+  });
+}
+
 function formatDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);

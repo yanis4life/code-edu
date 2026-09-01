@@ -206,9 +206,9 @@ async function loadLessonDetail() {
 
           <div id="lessonResult" style="display:none;margin:1rem 0"></div>
 
-          <div style="display:flex;gap:1rem;flex-wrap:wrap">
-            ${lesson.challenge_template ? '<button class="neon-btn" onclick="submitCode()">Submit Code</button>' : ''}
-            ${lesson.hint ? `<button class="glass-btn" onclick="showHint('${escapeHtml(lesson.hint)}')">Get Hint</button>` : ''}
+          <div id="submitArea" style="display:flex;gap:1rem;flex-wrap:wrap">
+            ${lesson.challenge_template ? '<button class="neon-btn" onclick="submitCode()" id="submitBtn">Submit Code</button>' : ''}
+            ${lesson.hint ? `<button class="glass-btn" onclick="showHint('${escapeHtml(lesson.hint)}')" id="hintBtn">Get Hint</button>` : ''}
           </div>
         </div>
       </div>
@@ -235,6 +235,7 @@ async function loadLessonDetail() {
 async function submitCode() {
   const editor = document.getElementById('codeEditor');
   const resultDiv = document.getElementById('lessonResult');
+  const submitArea = document.getElementById('submitArea');
   const lessonId = new URLSearchParams(window.location.search).get('id');
 
   if (!editor || !lessonId) return;
@@ -256,6 +257,14 @@ async function submitCode() {
         ${data.hint ? `<div class="bento-desc" style="margin-top:0.5rem;padding:0.5rem;background:var(--glass-bg);border-radius:var(--radius-sm)">Hint: ${data.hint}</div>` : ''}
       </div>
     `;
+
+    if (data.isCorrect) {
+      if (data.nextLessonId) {
+        submitArea.innerHTML = `<a href="/lesson?id=${data.nextLessonId}" class="neon-btn">Next Level ${data.nextLevel} <i class="fas fa-arrow-right"></i></a>`;
+      } else {
+        submitArea.innerHTML = `<a href="/lessons" class="neon-btn">All Levels Complete! <i class="fas fa-trophy"></i></a>`;
+      }
+    }
   } catch (err) {
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `<div class="bento-desc" style="color:#ff6b6b">${err.message}</div>`;
@@ -264,6 +273,7 @@ async function submitCode() {
 
 async function submitAnswer(answer) {
   const resultDiv = document.getElementById('lessonResult');
+  const submitArea = document.getElementById('submitArea');
   const lessonId = new URLSearchParams(window.location.search).get('id');
 
   if (!lessonId) return;
@@ -285,6 +295,14 @@ async function submitAnswer(answer) {
         ${data.hint ? `<div class="bento-desc" style="margin-top:0.5rem;padding:0.5rem;background:var(--glass-bg);border-radius:var(--radius-sm)">Hint: ${data.hint}</div>` : ''}
       </div>
     `;
+
+    if (data.isCorrect) {
+      if (data.nextLessonId) {
+        submitArea.innerHTML = `<a href="/lesson?id=${data.nextLessonId}" class="neon-btn">Next Level ${data.nextLevel} <i class="fas fa-arrow-right"></i></a>`;
+      } else {
+        submitArea.innerHTML = `<a href="/lessons" class="neon-btn">All Levels Complete! <i class="fas fa-trophy"></i></a>`;
+      }
+    }
   } catch (err) {
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `<div class="bento-desc" style="color:#ff6b6b">${err.message}</div>`;

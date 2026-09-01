@@ -7,6 +7,7 @@ function initAuth() {
 
   function updateUI() {
     const user = api.getCurrentUser();
+    updateNavForAuth();
     if (user && userMenu) {
       userMenu.style.display = 'flex';
       if (authButtons) authButtons.style.display = 'none';
