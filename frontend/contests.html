@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contests - CodeEdu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="viewport">
+  <div class="shell">
+    <div class="glow-sphere" style="top:-200px;right:-200px"></div>
+    <nav class="nav">
+      <a href="/" class="nav-logo">
+        <div class="logo-box">C</div>
+        <span>CodeEdu</span>
+      </a>
+      <div class="nav-pill">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/lessons">Learn</a>
+        <a href="/leaderboard">Leaderboard</a>
+        <a href="/contests" class="active">Contests</a>
+      </div>
+      <div class="nav-right" id="userMenu" style="display:none">
+        <a href="/profile" class="nav-logo" style="font-size:0.9rem">
+          <img class="user-menu-avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover" src="">
+          <span class="user-menu-name"></span>
+        </a>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-label">Competitions</div>
+        <h2 class="section-title">Weekly <span>Contests</span></h2>
+      </div>
+      <div id="contestsContent">
+        <div class="loading-spinner" style="margin:3rem auto"></div>
+      </div>
+    </section>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+async function loadContests() {
+  const container = document.getElementById('contestsContent');
+  if (!container) return;
+
+  try {
+    const data = await api.get('/contests');
+    container.innerHTML = '';
+
+    if (!data.contests || data.contests.length === 0) {
+      container.innerHTML = `
+        <div class="bento-card" style="text-align:center;padding:3rem">
+          <div class="bento-icon" style="font-size:3rem;margin-bottom:1rem"><i class="fas fa-trophy"></i></div>
+          <div class="bento-title" style="font-size:1.5rem;margin-bottom:0.5rem">No Active Contests</div>
+          <div class="bento-desc">Check back soon for upcoming coding competitions.</div>
+        </div>
+      `;
+      return;
+    }
+
+    const contestsGrid = document.createElement('div');
+    contestsGrid.className = 'bento-grid';
+
+    data.contests.forEach(contest => {
+      const statusColor = contest.status === 'active' ? 'var(--accent-emerald)' : contest.status === 'upcoming' ? 'var(--accent-lime)' : 'var(--text-muted)';
+      const card = document.createElement('div');
+      card.className = 'bento-card';
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem">
+          <span class="badge" style="background:rgba(204,255,0,0.15);color:${statusColor};border-color:${statusColor}">${contest.status}</span>
+        </div>
+        <div class="bento-title" style="font-size:1.25rem">${contest.title}</div>
+        <div class="bento-desc" style="margin-bottom:1rem">${contest.description}</div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:auto">
+          <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted)">
+            <i class="far fa-calendar"></i> ${formatDate(contest.start_time)}
+          </span>
+          <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted)">
+            <i class="far fa-clock"></i> ${formatDate(contest.end_time)}
+          </span>
+        </div>
+        ${contest.status === 'upcoming' || contest.status === 'active' ? `
+          <button class="neon-btn neon-btn-sm" style="margin-top:1rem" onclick="joinContest(${contest.id})">Join Contest</button>
+        ` : ''}
+      `;
+      contestsGrid.appendChild(card);
+    });
+
+    container.appendChild(contestsGrid);
+  } catch (err) {
+    container.innerHTML = `<div class="bento-card" style="text-align:center;padding:2rem"><div class="bento-desc">${err.message}</div></div>`;
+  }
+}
+
+async function joinContest(contestId) {
+  if (!api.isAuthenticated()) {
+    window.location.href = '/login';
+    return;
+  }
+
+  try {
+    await api.post(`/contests/${contestId}/join`);
+    showToast('Joined contest successfully', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadTheme();
+  initAuth();
+  loadContests();
+});
+</script>
+</body>
+</html>

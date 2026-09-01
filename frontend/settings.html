@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings - CodeEdu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="viewport">
+  <div class="shell" style="max-width:600px;margin:2rem auto;padding:2rem">
+    <div class="glow-sphere" style="top:-100px;right:-100px"></div>
+    <div style="position:relative;z-index:1">
+      <a href="/dashboard" class="glass-btn" style="margin-bottom:2rem;display:inline-flex"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+      <div class="section-label">Account Settings</div>
+      <h2 class="section-title" style="font-size:1.75rem;margin-bottom:2rem">Profile <span>Settings</span></h2>
+
+      <form id="profileForm">
+        <div class="form-group">
+          <label class="form-label">Display Name</label>
+          <input type="text" id="displayName" class="form-input" placeholder="Your display name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea id="bio" class="form-input" style="min-height:80px;resize:vertical" placeholder="Tell us about yourself"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Avatar</label>
+          <input type="file" id="avatarInput" class="form-input" accept="image/jpeg,image/png,image/webp" style="padding:0.5rem">
+          <div id="avatarPreview" style="margin-top:0.5rem;display:none">
+            <img id="avatarImg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--glass-border-hover)">
+          </div>
+        </div>
+        <div class="form-error" style="margin-bottom:1rem"></div>
+        <button type="submit" class="neon-btn">Save Changes</button>
+      </form>
+
+      <div style="margin-top:2rem;padding-top:2rem;border-top:1px solid var(--glass-border)">
+        <div class="section-label">Theme</div>
+        <div style="display:flex;gap:1rem;margin-top:1rem">
+          <button class="glass-btn" onclick="toggleTheme()">Toggle Theme</button>
+        </div>
+      </div>
+
+      <div style="margin-top:2rem;padding-top:2rem;border-top:1px solid var(--glass-border)">
+        <div class="section-label">Danger Zone</div>
+        <button class="glass-btn" style="border-color:#ff6b6b;color:#ff6b6b;margin-top:1rem" onclick="deleteAvatar()">Delete Avatar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  loadTheme();
+  initAuth();
+
+  if (!api.isAuthenticated()) {
+    window.location.href = '/login';
+    return;
+  }
+
+  const user = api.getCurrentUser();
+  if (user) {
+    document.getElementById('displayName').value = user.display_name || '';
+    document.getElementById('bio').value = user.bio || '';
+    if (user.avatar_url) {
+      document.getElementById('avatarPreview').style.display = 'block';
+      document.getElementById('avatarImg').src = user.avatar_url;
+    }
+  }
+
+  document.getElementById('avatarInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        document.getElementById('avatarPreview').style.display = 'block';
+        document.getElementById('avatarImg').src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api.put('/users/profile', {
+        displayName: document.getElementById('displayName').value,
+        bio: document.getElementById('bio').value
+      });
+
+      const avatarFile = document.getElementById('avatarInput').files[0];
+      if (avatarFile) {
+        await api.uploadAvatar(avatarFile);
+      }
+
+      const userData = await api.get('/auth/me');
+      localStorage.setItem('user', JSON.stringify(userData.user));
+      showToast('Profile updated', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+});
+
+async function deleteAvatar() {
+  try {
+    await api.delete('/upload/avatar');
+    document.getElementById('avatarPreview').style.display = 'none';
+    showToast('Avatar deleted', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson - CodeEdu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+#codeEditor { tab-size: 2; }
+#codeEditor:focus { border-color: var(--accent-lime); }
+</style>
+</head>
+<body>
+<div class="viewport">
+  <div class="shell">
+    <div class="glow-sphere" style="top:-200px;right:-200px"></div>
+    <nav class="nav">
+      <a href="/" class="nav-logo">
+        <div class="logo-box">C</div>
+        <span>CodeEdu</span>
+      </a>
+      <div class="nav-pill">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/lessons" class="active">Learn</a>
+        <a href="/leaderboard">Leaderboard</a>
+      </div>
+      <div class="nav-right" id="userMenu" style="display:none">
+        <a href="/profile" class="nav-logo" style="font-size:0.9rem">
+          <img class="user-menu-avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover" src="">
+          <span class="user-menu-name"></span>
+        </a>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div id="lessonContent"></div>
+    </section>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/dashboard.js"></script>
+<script>document.addEventListener('DOMContentLoaded', loadLessonDetail);</script>
+</body>
+</html>

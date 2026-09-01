@@ -1,0 +1,45 @@
+name = "code-edu-platform"
+main = "api/server.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+pages_build_output_dir = "frontend"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "code-edu-db"
+database_id = "code-edu-db"
+
+[[r2_buckets]]
+binding = "R2_STORAGE"
+bucket_name = "code-edu-storage"
+
+[[queues.producers]]
+binding = "QUEUE"
+queue = "code-edu-queue"
+
+[[queues.consumers]]
+queue = "code-edu-queue"
+max_batch_size = 10
+max_batch_timeout = 5
+
+[triggers]
+crons = ["0 0 * * *", "0 */6 * * *", "0 12 * * 1"]
+
+[vars]
+ENVIRONMENT = "production"
+API_VERSION = "v1"
+FRONTEND_URL = "https://code-edu.cc.cd"
+MAX_AVATAR_SIZE = "5242880"
+MAX_SNIPPET_SIZE = "10485760"
+MAX_ATTACHMENT_SIZE = "20971520"
+JWT_ACCESS_EXPIRY = "15m"
+JWT_REFRESH_EXPIRY = "7d"
+BCRYPT_COST = "12"
+RATE_LIMIT_AUTH = "100"
+RATE_LIMIT_READ = "1000"
+UPLOAD_DIR = "/tmp/uploads"
+
+[[migrations]]
+table = "d1_migrations"
+directory = "migrations"

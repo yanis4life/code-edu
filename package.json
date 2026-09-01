@@ -1,0 +1,29 @@
+{
+  "name": "code-edu-platform",
+  "version": "1.0.0",
+  "description": "Gamified programming education platform",
+  "main": "api/server.js",
+  "scripts": {
+    "start": "wrangler pages dev frontend --kv KV --d1 DB --r2 R2_STORAGE",
+    "deploy": "wrangler pages deploy frontend --d1 DB --r2 R2_STORAGE",
+    "deploy:api": "wrangler deploy api/server.js",
+    "migrate": "wrangler d1 execute DB --file=./schema.sql",
+    "dev": "node api/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "pino": "^8.17.2",
+    "uuid": "^9.0.0",
+    "xss": "^1.0.15"
+  },
+  "devDependencies": {
+    "wrangler": "^3.28.0"
+  }
+}

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - CodeEdu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.admin-tabs {
+  display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap;
+}
+.admin-tab {
+  padding: 0.75rem 1.5rem; border-radius: 9999px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  color: var(--text-secondary); font-family: var(--font-heading);
+  font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  transition: all var(--transition); text-transform: uppercase; letter-spacing: 0.02em;
+}
+.admin-tab.active { background: var(--accent-lime); color: #000000; border-color: var(--accent-lime); }
+.admin-tab:hover:not(.active) { border-color: var(--glass-border-hover); }
+.admin-panel { display: none; }
+.admin-panel.active { display: block; }
+</style>
+</head>
+<body>
+<div class="viewport">
+  <div class="shell">
+    <div class="glow-sphere" style="top:-200px;right:-200px"></div>
+    <nav class="nav">
+      <a href="/" class="nav-logo">
+        <div class="logo-box">C</div>
+        <span>CodeEdu Admin</span>
+      </a>
+      <div class="nav-right" id="userMenu" style="display:none">
+        <a href="/dashboard" class="glass-btn" style="padding:0.5rem 1rem;font-size:0.75rem">Back to Dashboard</a>
+        <button id="logoutBtn" class="glass-btn" style="padding:0.5rem 1rem;font-size:0.75rem">Logout</button>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-label">Administration</div>
+        <h2 class="section-title">Admin <span>Panel</span></h2>
+      </div>
+
+      <div class="admin-tabs">
+        <div class="admin-tab active" onclick="switchAdminTab('stats')">Statistics</div>
+        <div class="admin-tab" onclick="switchAdminTab('users')">Users</div>
+        <div class="admin-tab" onclick="switchAdminTab('lessons')">Lessons</div>
+        <div class="admin-tab" onclick="switchAdminTab('storage')">Storage</div>
+      </div>
+
+      <div id="adminStats" class="admin-panel active"></div>
+      <div id="adminUsers" class="admin-panel"></div>
+      <div id="adminLessons" class="admin-panel"></div>
+      <div id="adminStorage" class="admin-panel"></div>
+    </section>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+function switchAdminTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.admin-tab[onclick*="${tab}"]`).classList.add('active');
+  document.getElementById(`admin${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+  loadAdminTab(tab);
+}
+
+async function loadAdminTab(tab) {
+  const container = document.getElementById(`admin${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+  if (!container) return;
+
+  try {
+    container.innerHTML = '<div class="loading-spinner" style="margin:2rem auto"></div>';
+
+    if (tab === 'stats') {
+      const data = await api.get('/admin/stats');
+      container.innerHTML = `
+        <div class="bento-grid">
+          <div class="bento-card"><div class="bento-icon" style="font-size:1.5rem"><i class="fas fa-users"></i></div><div class="bento-title" style="font-size:2rem">${data.totalUsers}</div><div class="bento-desc">Total Users</div></div>
+          <div class="bento-card"><div class="bento-icon" style="font-size:1.5rem"><i class="fas fa-book"></i></div><div class="bento-title" style="font-size:2rem">${data.totalLessons}</div><div class="bento-desc">Total Lessons</div></div>
+          <div class="bento-card"><div class="bento-icon" style="font-size:1.5rem"><i class="fas fa-code"></i></div><div class="bento-title" style="font-size:2rem">${data.totalSubmissions}</div><div class="bento-desc">Submissions</div></div>
+          <div class="bento-card"><div class="bento-icon" style="font-size:1.5rem"><i class="fas fa-medal"></i></div><div class="bento-title" style="font-size:2rem">${data.totalAchievements}</div><div class="bento-desc">Achievements</div></div>
+          <div class="bento-card"><div class="bento-icon" style="font-size:1.5rem"><i class="fas fa-fire"></i></div><div class="bento-title" style="font-size:2rem">${data.activeToday}</div><div class="bento-desc">Active Today</div></div>
+        </div>
+      `;
+    } else if (tab === 'users') {
+      const data = await api.get('/admin/users');
+      container.innerHTML = `
+        <div class="bento-card" style="padding:0">
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="border-bottom:1px solid var(--glass-border)">
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">ID</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Username</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Email</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">XP</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Level</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Status</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(data.users || []).map(u => `
+                  <tr style="border-bottom:1px solid var(--glass-border)">
+                    <td style="padding:0.75rem 1rem;font-family:var(--font-mono);font-size:0.8rem">${u.id}</td>
+                    <td style="padding:0.75rem 1rem;font-weight:600">${u.username}</td>
+                    <td style="padding:0.75rem 1rem;color:var(--text-secondary);font-size:0.85rem">${u.email}</td>
+                    <td style="padding:0.75rem 1rem;font-family:var(--font-mono);color:var(--accent-lime)">${formatXp(u.xp)}</td>
+                    <td style="padding:0.75rem 1rem;font-family:var(--font-mono)">${u.level}</td>
+                    <td style="padding:0.75rem 1rem"><span class="badge ${u.is_banned ? 'badge-muted' : 'badge-emerald'}">${u.is_banned ? 'Banned' : 'Active'}</span></td>
+                    <td style="padding:0.75rem 1rem">
+                      <button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.7rem" onclick="toggleBan(${u.id}, ${u.is_banned})">${u.is_banned ? 'Unban' : 'Ban'}</button>
+                      <button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.7rem" onclick="resetProgress(${u.id})">Reset</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    } else if (tab === 'lessons') {
+      container.innerHTML = `
+        <div class="bento-card" style="margin-bottom:1.5rem">
+          <div class="section-label">Create New Lesson</div>
+          <form id="lessonForm" style="margin-top:1rem">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div class="form-group"><label class="form-label">Language</label><input class="form-input" id="lLanguage" value="python" required></div>
+              <div class="form-group"><label class="form-label">Level Number</label><input class="form-input" id="lLevel" type="number" required></div>
+              <div class="form-group" style="grid-column:span 2"><label class="form-label">Title</label><input class="form-input" id="lTitle" required></div>
+              <div class="form-group" style="grid-column:span 2"><label class="form-label">Theory Text</label><textarea class="form-input" id="lTheory" style="min-height:100px;resize:vertical"></textarea></div>
+              <div class="form-group" style="grid-column:span 2"><label class="form-label">Challenge Type</label>
+                <select class="form-input" id="lType">
+                  <option value="fix_bug">Fix Bug</option>
+                  <option value="complete_code">Complete Code</option>
+                  <option value="predict_output">Predict Output</option>
+                  <option value="true_false">True or False</option>
+                  <option value="multiple_choice">Multiple Choice</option>
+                </select>
+              </div>
+              <div class="form-group" style="grid-column:span 2"><label class="form-label">Challenge Description</label><textarea class="form-input" id="lDescription" style="min-height:80px;resize:vertical"></textarea></div>
+              <div class="form-group" style="grid-column:span 2"><label class="form-label">Correct Answer</label><input class="form-input" id="lAnswer" required></div>
+              <div class="form-group"><label class="form-label">Difficulty</label>
+                <select class="form-input" id="lDifficulty">
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">XP Reward</label><input class="form-input" id="lXp" type="number" value="50"></div>
+            </div>
+            <button type="submit" class="neon-btn" style="margin-top:1rem">Create Lesson</button>
+          </form>
+        </div>
+      `;
+      document.getElementById('lessonForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          await api.post('/admin/lessons', {
+            language: document.getElementById('lLanguage').value,
+            levelNumber: parseInt(document.getElementById('lLevel').value),
+            title: document.getElementById('lTitle').value,
+            theoryText: document.getElementById('lTheory').value,
+            challengeType: document.getElementById('lType').value,
+            challengeDescription: document.getElementById('lDescription').value,
+            correctAnswer: document.getElementById('lAnswer').value,
+            difficulty: document.getElementById('lDifficulty').value,
+            xpReward: parseInt(document.getElementById('lXp').value)
+          });
+          showToast('Lesson created successfully', 'success');
+          document.getElementById('lessonForm').reset();
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    } else if (tab === 'storage') {
+      const data = await api.get('/admin/storage');
+      container.innerHTML = `
+        <div class="bento-card" style="margin-bottom:1.5rem">
+          <div class="bento-title">Total Storage: ${formatXp(data.totalSize)} bytes</div>
+          <div class="bento-desc">Files: ${(data.files || []).length}</div>
+        </div>
+        <div class="bento-card" style="padding:0">
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="border-bottom:1px solid var(--glass-border)">
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">File</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">User</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Size</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Type</th>
+                  <th style="padding:1rem;text-align:left;font-family:var(--font-mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(data.files || []).slice(0, 20).map(f => `
+                  <tr style="border-bottom:1px solid var(--glass-border)">
+                    <td style="padding:0.75rem 1rem;font-family:var(--font-mono);font-size:0.8rem">${f.original_name || f.filename}</td>
+                    <td style="padding:0.75rem 1rem">${f.username || 'N/A'}</td>
+                    <td style="padding:0.75rem 1rem;font-family:var(--font-mono);font-size:0.8rem">${formatXp(f.size)}</td>
+                    <td style="padding:0.75rem 1rem;font-size:0.8rem">${f.mime_type}</td>
+                    <td style="padding:0.75rem 1rem;font-size:0.8rem;color:var(--text-secondary)">${formatDate(f.created_at)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+  } catch (err) {
+    container.innerHTML = `<div class="bento-card" style="text-align:center;padding:2rem"><div class="bento-desc">${err.message}</div></div>`;
+  }
+}
+
+async function toggleBan(userId, currentlyBanned) {
+  try {
+    await api.put(`/admin/users/${userId}/ban`, { ban: !currentlyBanned });
+    showToast(`User ${currentlyBanned ? 'unbanned' : 'banned'}`, 'success');
+    loadAdminTab('users');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function resetProgress(userId) {
+  if (!confirm('Reset this user progress?')) return;
+  try {
+    await api.delete(`/admin/users/${userId}/progress`);
+    showToast('Progress reset', 'success');
+    loadAdminTab('users');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadTheme();
+  initAuth();
+  loadAdminTab('stats');
+});
+</script>
+</body>
+</html>

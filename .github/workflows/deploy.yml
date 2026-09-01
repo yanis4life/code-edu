@@ -1,0 +1,61 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Detect schema or seed changes
+        id: changes
+        run: |
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "seed=true" >> "$GITHUB_OUTPUT"
+          else
+            if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
+               | grep -qE '^(schema\.sql|python/seed_lessons\.sql)';
+            then echo "seed=true" >> "$GITHUB_OUTPUT"
+            else echo "seed=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Apply D1 schema
+        if: steps.changes.outputs.seed == 'true'
+        run: npx wrangler d1 execute code-edu-db --remote --file=schema.sql
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Reseed curriculum
+        if: steps.changes.outputs.seed == 'true'
+        run: npx wrangler d1 execute code-edu-db --remote --file=python/seed_lessons.sql
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deploy Pages and Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy frontend --d1 DB --r2 R2_STORAGE
+
+      - name: Deploy Python services as Workers
+        run: |
+          for svc in code_analysis pdf_generator data_analytics achievement_engine leaderboard_service email_service image_processor snippet_validator; do
+            echo "Deploying $svc..."
+            npx wrangler deploy python/${svc}.py --name code-edu-${svc}
+          done
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
