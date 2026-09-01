@@ -370,7 +370,7 @@ async function toggleTheory() {
   }
 }
 
-function showHint(hint) {
+async function showHint(hint) {
   const resultDiv = document.getElementById('lessonResult');
   const lessonId = new URLSearchParams(window.location.search).get('id');
   resultDiv.style.display = 'block';
