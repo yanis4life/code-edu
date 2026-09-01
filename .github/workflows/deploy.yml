@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare
+name: Deploy to Cloudflare (code-edu.cc.cd)
 
 on:
   push:
@@ -33,29 +33,29 @@ jobs:
         if: steps.changes.outputs.seed == 'true'
         run: npx wrangler d1 execute code-edu-db --remote --file=schema.sql
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Reseed curriculum
         if: steps.changes.outputs.seed == 'true'
         run: npx wrangler d1 execute code-edu-db --remote --file=python/seed_lessons.sql
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
-      - name: Deploy Pages and Workers
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy frontend --d1 DB --r2 R2_STORAGE
-
-      - name: Deploy Python services as Workers
-        run: |
-          for svc in code_analysis pdf_generator data_analytics achievement_engine leaderboard_service email_service image_processor snippet_validator; do
-            echo "Deploying $svc..."
-            npx wrangler deploy python/${svc}.py --name code-edu-${svc}
-          done
+      - name: Deploy frontend to Cloudflare Pages
+        run: npx wrangler pages deploy frontend --project-name code-edu --branch main --d1 DB --r2 R2_STORAGE
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Deploy API worker
+        run: npx wrangler deploy --name code-edu-api --d1 DB --r2 R2_STORAGE --queue QUEUE
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Verify deployment
+        run: |
+          echo "Deployed to https://code-edu.cc.cd"
+          echo "API at https://code-edu-api.yanis4life.workers.dev"

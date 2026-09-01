@@ -4,11 +4,12 @@ compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
 pages_build_output_dir = "frontend"
+pages_project_name = "code-edu"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "code-edu-db"
-database_id = "code-edu-db"
+database_id = "d9decac2-d02e-4011-a64e-e1a2d6f0c37d"
 
 [[r2_buckets]]
 binding = "R2_STORAGE"
@@ -38,7 +39,6 @@ JWT_REFRESH_EXPIRY = "7d"
 BCRYPT_COST = "12"
 RATE_LIMIT_AUTH = "100"
 RATE_LIMIT_READ = "1000"
-UPLOAD_DIR = "/tmp/uploads"
 
 [[migrations]]
 table = "d1_migrations"
