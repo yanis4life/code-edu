@@ -1,10 +1,6 @@
 name = "code-edu-platform"
-main = "api/server.js"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
-
-pages_build_output_dir = "frontend"
-pages_project_name = "code-edu"
 
 [[d1_databases]]
 binding = "DB"
@@ -19,14 +15,6 @@ bucket_name = "code-edu-storage"
 binding = "QUEUE"
 queue = "code-edu-queue"
 
-[[queues.consumers]]
-queue = "code-edu-queue"
-max_batch_size = 10
-max_batch_timeout = 5
-
-[triggers]
-crons = ["0 0 * * *", "0 */6 * * *", "0 12 * * 1"]
-
 [vars]
 ENVIRONMENT = "production"
 API_VERSION = "v1"
@@ -39,7 +27,3 @@ JWT_REFRESH_EXPIRY = "7d"
 BCRYPT_COST = "12"
 RATE_LIMIT_AUTH = "100"
 RATE_LIMIT_READ = "1000"
-
-[[migrations]]
-table = "d1_migrations"
-directory = "migrations"
