@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy Frontend to Cloudflare Pages
         run: npx wrangler@3 pages deploy frontend --project-name code-edu --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
