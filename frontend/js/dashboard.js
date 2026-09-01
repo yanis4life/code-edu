@@ -98,7 +98,11 @@ async function loadDashboard() {
 
 const languages = [
   { id: 'python', name: 'Python', icon: 'fa-brands fa-python', desc: '100 levels from basics to advanced', color: '#3776AB' },
-  { id: 'html', name: 'HTML & CSS', icon: 'fa-brands fa-html5', desc: '100 levels from structure to mastery', color: '#E34F26' }
+  { id: 'html', name: 'HTML & CSS', icon: 'fa-brands fa-html5', desc: '100 levels from structure to mastery', color: '#E34F26' },
+  { id: 'javascript', name: 'JavaScript', icon: 'fa-brands fa-js', desc: '100 levels from syntax to advanced', color: '#F7DF1E' },
+  { id: 'java', name: 'Java', icon: 'fa-brands fa-java', desc: '100 levels from OOP to advanced', color: '#ED8B00' },
+  { id: 'sql', name: 'SQL', icon: 'fa-solid fa-database', desc: '100 levels from queries to advanced', color: '#4479A1' },
+  { id: 'xml', name: 'XML', icon: 'fa-solid fa-code', desc: '100 levels from markup to mastery', color: '#0060AC' }
 ];
 
 async function loadLessons() {
