@@ -13,8 +13,12 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Install dependencies
-        run: npm install
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install wrangler
+        run: npm install -g wrangler
 
       - name: Detect schema or seed changes
         id: changes
@@ -31,24 +35,23 @@ jobs:
 
       - name: Apply D1 schema
         if: steps.changes.outputs.seed == 'true'
-        run: npx wrangler d1 execute code-edu-db --remote --file=schema.sql
+        run: wrangler d1 execute code-edu-db --remote --file=schema.sql
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Reseed curriculum
         if: steps.changes.outputs.seed == 'true'
-        run: npx wrangler d1 execute code-edu-db --remote --file=python/seed_lessons.sql
+        run: wrangler d1 execute code-edu-db --remote --file=python/seed_lessons.sql
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy frontend --project-name code-edu --branch main
+        run: wrangler pages deploy frontend --project-name code-edu --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
-      - name: Verify deployment
-        run: |
-          echo "Deployed to https://code-edu.cc.cd"
+      - name: Verify
+        run: curl -s -o /dev/null -w "%{http_code}" https://code-edu.cc.cd
