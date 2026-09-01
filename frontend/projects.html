@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects - CodeEdu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="viewport">
+  <div class="shell">
+    <div class="glow-sphere" style="top:-200px;right:-200px"></div>
+    <nav class="nav">
+      <a href="/" class="nav-logo" id="logoLink">
+        <div class="logo-box">C</div>
+        <span>CodeEdu</span>
+      </a>
+      <div class="nav-pill">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/lessons">Learn</a>
+        <a href="/projects" class="active">Projects</a>
+        <a href="/leaderboard">Leaderboard</a>
+      </div>
+      <div class="nav-right" id="userMenu" style="display:none">
+        <a href="/profile" class="nav-logo" style="font-size:0.9rem">
+          <img class="user-menu-avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover" src="">
+          <span class="user-menu-name"></span>
+        </a>
+        <button id="logoutBtn" class="glass-btn" style="padding:0.4rem 0.75rem;font-size:0.7rem">Logout</button>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="/dashboard" onclick="toggleMenu()">Dashboard</a>
+      <a href="/lessons" onclick="toggleMenu()">Learn</a>
+      <a href="/projects" onclick="toggleMenu()">Projects</a>
+      <a href="/leaderboard" onclick="toggleMenu()">Leaderboard</a>
+      <a href="/profile" onclick="toggleMenu()">Profile</a>
+      <a href="/settings" onclick="toggleMenu()">Settings</a>
+      <div class="mobile-user" id="mobileUser" style="display:none">
+        <img class="user-menu-avatar" src="">
+        <span class="user-menu-name"></span>
+      </div>
+    </div>
+    <section class="section">
+      <div class="section-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div class="section-label">Projects</div>
+          <h2 class="section-title">Deploy <span>Code</span></h2>
+        </div>
+        <button class="neon-btn" onclick="showCreateForm()"><i class="fas fa-plus"></i> New Project</button>
+      </div>
+
+      <div id="createForm" style="display:none;margin-bottom:2rem">
+        <div class="bento-card">
+          <div class="bento-title" style="margin-bottom:1rem">Create Project</div>
+          <form id="projectForm">
+            <div class="form-group">
+              <label class="form-label">Project Name</label>
+              <input type="text" id="projName" class="form-input" placeholder="my-awesome-project" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea id="projDesc" class="form-input" style="min-height:60px;resize:vertical" placeholder="What does your project do?"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div class="form-group">
+                <label class="form-label">Language</label>
+                <select id="projLang" class="form-input">
+                  <option value="javascript">JavaScript</option>
+                  <option value="python">Python</option>
+                  <option value="html">HTML/CSS</option>
+                  <option value="typescript">TypeScript</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Visibility</label>
+                <select id="projVis" class="form-input">
+                  <option value="public">Public (Open Source)</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Source Code</label>
+              <textarea id="projCode" class="form-input" style="min-height:120px;resize:vertical;font-family:var(--font-mono);font-size:0.8rem" placeholder="Paste your source code here..."></textarea>
+            </div>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+              <button type="submit" class="neon-btn">Create Project</button>
+              <button type="button" class="glass-btn" onclick="hideCreateForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="projectsContent">
+        <div class="loading-spinner" style="margin:3rem auto"></div>
+      </div>
+    </section>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+async function loadProjects() {
+  const container = document.getElementById('projectsContent');
+  if (!container) return;
+  if (!api.isAuthenticated()) { window.location.href = '/login'; return; }
+
+  try {
+    container.innerHTML = '<div class="loading-spinner" style="margin:3rem auto"></div>';
+    const data = await api.get('/projects');
+    container.innerHTML = '';
+
+    if (!data.projects || data.projects.length === 0) {
+      container.innerHTML = '<div class="bento-card" style="text-align:center;padding:3rem"><div class="bento-icon" style="font-size:3rem;margin-bottom:1rem"><i class="fas fa-code-branch"></i></div><div class="bento-title" style="font-size:1.5rem;margin-bottom:0.5rem">No Projects Yet</div><div class="bento-desc">Create your first project to deploy it to the cloud.</div></div>';
+      return;
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'bento-grid';
+
+    data.projects.forEach(p => {
+      const isOwner = api.getCurrentUser() && api.getCurrentUser().username === p.username;
+      const card = document.createElement('div');
+      card.className = 'bento-card';
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+          <span class="badge ${p.visibility === 'public' ? 'badge-emerald' : 'badge-muted'}"><i class="fas ${p.visibility === 'public' ? 'fa-globe' : 'fa-lock'}" style="margin-right:4px"></i>${p.visibility}</span>
+          <span class="badge badge-lime">${p.language}</span>
+        </div>
+        <div class="bento-title" style="font-size:1.1rem">${p.name}</div>
+        <div class="bento-desc" style="margin-bottom:0.75rem">${p.description || 'No description'}</div>
+        <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);margin-bottom:0.75rem">by ${p.username || 'unknown'}</div>
+        ${p.deployed ? `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem"><span class="status-dot" style="width:8px;height:8px;background:var(--accent-emerald);animation:none"></span><span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--accent-emerald)">Deployed</span></div>` : ''}
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:auto">
+          ${p.deployed ? `<a href="${p.live_url}" target="_blank" class="neon-btn neon-btn-sm" style="font-size:0.65rem"><i class="fas fa-external-link-alt"></i> Live</a>` : ''}
+          ${isOwner ? `<button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem" onclick="deployProject(${p.id})"><i class="fas fa-rocket"></i> Deploy</button>` : ''}
+          ${isOwner ? `<button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem;border-color:#ff6b6b;color:#ff6b6b" onclick="deleteProject(${p.id})"><i class="fas fa-trash"></i></button>` : ''}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    container.appendChild(grid);
+  } catch (err) {
+    container.innerHTML = '<div class="bento-card" style="text-align:center;padding:2rem"><div class="bento-desc">' + err.message + '</div></div>';
+  }
+}
+
+function showCreateForm() {
+  document.getElementById('createForm').style.display = 'block';
+  document.getElementById('createForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideCreateForm() {
+  document.getElementById('createForm').style.display = 'none';
+  document.getElementById('projectForm').reset();
+}
+
+document.getElementById('projectForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await api.post('/projects', {
+      name: document.getElementById('projName').value,
+      description: document.getElementById('projDesc').value,
+      language: document.getElementById('projLang').value,
+      visibility: document.getElementById('projVis').value,
+      sourceCode: document.getElementById('projCode').value
+    });
+    showToast('Project created', 'success');
+    hideCreateForm();
+    loadProjects();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+});
+
+async function deployProject(id) {
+  try {
+    const data = await api.post('/projects/' + id + '/deploy');
+    showToast('Deployed: ' + data.liveUrl, 'success');
+    loadProjects();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project?')) return;
+  try {
+    await api.delete('/projects/' + id);
+    showToast('Project deleted', 'success');
+    loadProjects();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadTheme();
+  initAuth();
+  loadProjects();
+});
+</script>
+</body>
+</html>

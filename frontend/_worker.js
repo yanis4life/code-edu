@@ -385,7 +385,59 @@ async function handleApi(request, env) {
       return j({ message: 'Deleted' });
     }
 
-    return e('Not found', 404);
+
+    if (path === 'projects' && method === 'GET') {
+      const u = await auth(); if (!u) return e('Unauthorized', 401);
+      const projects = await db.prepare('SELECT p.*, u2.username FROM projects p LEFT JOIN users u2 ON p.user_id = u2.id WHERE p.user_id = ? OR p.visibility = \'public\' ORDER BY p.created_at DESC LIMIT 50').bind(u.id).all();
+      return j({ projects: projects.results });
+    }
+
+    if (path === 'projects' && method === 'POST') {
+      const u = await auth(); if (!u) return e('Unauthorized', 401);
+      const bd = await request.json();
+      if (!bd.name) return e('Name required');
+      await db.prepare('INSERT INTO projects (user_id, name, description, language, visibility, source_code) VALUES (?, ?, ?, ?, ?, ?)').bind(u.id, bd.name, bd.description || '', bd.language || 'javascript', bd.visibility || 'public', bd.sourceCode || '').run();
+      return j({ message: 'Created' }, 201);
+    }
+
+    if (path.match(/^projects\/\d+$/) && method === 'GET') {
+      const p = await db.prepare('SELECT p.*, u2.username FROM projects p LEFT JOIN users u2 ON p.user_id = u2.id WHERE p.id = ?').bind(parseInt(path.split('/')[1])).first();
+      if (!p) return e('Not found', 404);
+      if (p.visibility === 'private' && p.user_id !== (await auth() || {}).id) return e('Forbidden', 403);
+      return j({ project: p });
+    }
+
+    if (path.match(/^projects\/\d+$/) && method === 'PUT') {
+      const u = await auth(); if (!u) return e('Unauthorized', 401);
+      const pid = parseInt(path.split('/')[1]);
+      const p = await db.prepare('SELECT * FROM projects WHERE id = ? AND user_id = ?').bind(pid, u.id).first();
+      if (!p) return e('Not found', 404);
+      const bd = await request.json();
+      await db.prepare('UPDATE projects SET name = ?, description = ?, language = ?, visibility = ?, source_code = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(bd.name || p.name, bd.description ?? p.description, bd.language || p.language, bd.visibility || p.visibility, bd.sourceCode ?? p.source_code, pid).run();
+      return j({ message: 'Updated' });
+    }
+
+    if (path.match(/^projects\/\d+$/) && method === 'DELETE') {
+      const u = await auth(); if (!u) return e('Unauthorized', 401);
+      const pid = parseInt(path.split('/')[1]);
+      const p = await db.prepare('SELECT * FROM projects WHERE id = ? AND user_id = ?').bind(pid, u.id).first();
+      if (!p) return e('Not found', 404);
+      await db.prepare('DELETE FROM projects WHERE id = ?').bind(pid).run();
+      return j({ message: 'Deleted' });
+    }
+
+    if (path.match(/^projects\/\d+\/deploy$/) && method === 'POST') {
+      const u = await auth(); if (!u) return e('Unauthorized', 401);
+      const pid = parseInt(path.split('/')[1]);
+      const p = await db.prepare('SELECT * FROM projects WHERE id = ? AND user_id = ?').bind(pid, u.id).first();
+      if (!p) return e('Not found', 404);
+      const deployId = crypto.randomUUID().slice(0, 8);
+      const liveUrl = p.visibility === 'public' ? `https://${p.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${deployId}.code-edu.pages.dev` : `https://${p.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${deployId}.code-edu.workers.dev`;
+      await db.prepare('UPDATE projects SET deployed = 1, deployment_id = ?, live_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(deployId, liveUrl, pid).run();
+      return j({ message: 'Deployed', liveUrl: liveUrl, deploymentId: deployId });
+    }
+
+        return e('Not found', 404);
   } catch (err) {
     return e(err.message, 500);
   }
