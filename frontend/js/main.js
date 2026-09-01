@@ -1,12 +1,10 @@
 function showToast(message, type = 'info') {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
-
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
   toast.textContent = message;
   document.body.appendChild(toast);
-
   setTimeout(() => {
     toast.style.opacity = '0';
     toast.style.transition = 'opacity 0.3s ease';
@@ -25,6 +23,17 @@ function toggleTheme() {
 function loadTheme() {
   const saved = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
+}
+
+function toggleMenu() {
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const menuOverlay = document.getElementById('menuOverlay');
+  if (!hamburger || !mobileMenu || !menuOverlay) return;
+  hamburger.classList.toggle('active');
+  mobileMenu.classList.toggle('active');
+  menuOverlay.classList.toggle('active');
+  document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
 }
 
 function updateNavForAuth() {
@@ -73,34 +82,6 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
-}
-
-function createElement(tag, attrs = {}, children = []) {
-  const el = document.createElement(tag);
-  Object.entries(attrs).forEach(([key, value]) => {
-    if (key === 'className') el.className = value;
-    else if (key === 'style' && typeof value === 'object') Object.assign(el.style, value);
-    else if (key.startsWith('on')) el.addEventListener(key.slice(2).toLowerCase(), value);
-    else el.setAttribute(key, value);
-  });
-  children.forEach(child => {
-    if (typeof child === 'string') el.appendChild(document.createTextNode(child));
-    else if (child instanceof Node) el.appendChild(child);
-  });
-  return el;
-}
-
-function renderSkeleton(lines = 3) {
-  const container = document.createDocumentFragment();
-  for (let i = 0; i < lines; i++) {
-    const div = document.createElement('div');
-    div.className = 'skeleton';
-    div.style.height = '20px';
-    div.style.width = `${60 + Math.random() * 40}%`;
-    div.style.marginBottom = '0.75rem';
-    container.appendChild(div);
-  }
-  return container;
 }
 
 function getDifficultyColor(difficulty) {

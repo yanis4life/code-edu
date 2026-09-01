@@ -31,7 +31,25 @@
           <span class="user-menu-name"></span>
         </a>
       </div>
+    </nav>      </div>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
     </nav>
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="/dashboard" onclick="toggleMenu()">Dashboard</a>
+      <a href="/lessons" onclick="toggleMenu()">Learn</a>
+      <a href="/leaderboard" onclick="toggleMenu()">Leaderboard</a>
+      <a href="/contests" onclick="toggleMenu()">Contests</a>
+      <a href="/search" onclick="toggleMenu()">Search</a>
+      <a href="/profile" onclick="toggleMenu()">Profile</a>
+      <a href="/settings" onclick="toggleMenu()">Settings</a>
+      <div class="mobile-user" id="mobileUser" style="display:none">
+        <img class="user-menu-avatar" src="">
+        <span class="user-menu-name"></span>
+      </div>
+    </div>
 
     <section class="section">
       <div class="section-header">
