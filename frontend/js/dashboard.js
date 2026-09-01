@@ -96,24 +96,66 @@ async function loadDashboard() {
   }
 }
 
+const languages = [
+  { id: 'python', name: 'Python', icon: 'fa-brands fa-python', desc: '100 levels from basics to advanced', color: '#3776AB' },
+  { id: 'html', name: 'HTML & CSS', icon: 'fa-brands fa-html5', desc: '100 levels from structure to mastery', color: '#E34F26' }
+];
+
 async function loadLessons() {
+  const container = document.getElementById('lessonsContent');
+  if (!container) return;
+
+  const langParam = new URLSearchParams(window.location.search).get('language');
+  if (langParam) {
+    return loadLanguageLevels(langParam);
+  }
+
+  container.innerHTML = '';
+  const header = document.createElement('div');
+  header.className = 'section-header';
+  header.innerHTML = '<div class="section-label">Choose Your Path</div><h2 class="section-title">Pick a <span>Language</span></h2>';
+  container.appendChild(header);
+
+  const grid = document.createElement('div');
+  grid.className = 'bento-grid';
+
+  const user = api.getCurrentUser();
+  languages.forEach(lang => {
+    const card = document.createElement('div');
+    card.className = 'bento-card';
+    card.style.cursor = 'pointer';
+    card.onclick = () => { window.location.href = '/lessons?language=' + lang.id; };
+    card.innerHTML = '<div class="bento-icon" style="font-size:2.5rem;color:' + lang.color + '"><i class="' + lang.icon + '"></i></div><div class="bento-title" style="font-size:1.5rem">' + lang.name + '</div><div class="bento-desc">' + lang.desc + '</div><div style="margin-top:auto;padding-top:1rem"><span class="neon-btn neon-btn-sm" style="display:inline-flex">Start Learning</span></div>';
+    grid.appendChild(card);
+  });
+
+  container.appendChild(grid);
+}
+
+async function loadLanguageLevels(language) {
   const container = document.getElementById('lessonsContent');
   if (!container) return;
 
   try {
     container.innerHTML = '<div class="loading-spinner" style="margin:3rem auto"></div>';
 
-    const language = new URLSearchParams(window.location.search).get('language') || 'python';
     const data = await api.get('/lessons', { language });
 
     container.innerHTML = '';
 
+    const backBtn = document.createElement('a');
+    backBtn.href = '/lessons';
+    backBtn.className = 'glass-btn';
+    backBtn.style.cssText = 'margin-bottom:1.5rem;display:inline-flex;font-size:0.75rem;padding:0.4rem 0.75rem';
+    backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> All Languages';
+    container.appendChild(backBtn);
+
+    const found = languages.find(l => l.id === language);
+    const langName = found ? found.name : language.charAt(0).toUpperCase() + language.slice(1);
+
     const header = document.createElement('div');
     header.className = 'section-header';
-    header.innerHTML = `
-      <div class="section-label">${language} Curriculum</div>
-      <h2 class="section-title">${language.charAt(0).toUpperCase() + language.slice(1)} <span>Levels</span></h2>
-    `;
+    header.innerHTML = '<div class="section-label">' + langName + ' Curriculum</div><h2 class="section-title">' + langName + ' <span>Levels</span></h2>';
     container.appendChild(header);
 
     const levelsGrid = document.createElement('div');
@@ -124,27 +166,15 @@ async function loadLessons() {
       card.className = 'bento-card';
       const completed = lesson.completed;
       const score = lesson.score || 0;
-
       const locked = lesson.locked && !completed;
-      card.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem">
-          <span class="badge ${completed ? 'badge-emerald' : locked ? 'badge-muted' : 'badge-muted'}">Level ${lesson.level_number}</span>
-          <span class="badge badge-lime">${lesson.difficulty}</span>
-        </div>
-        <div class="bento-title" style="font-size:1.1rem">${locked ? '<i class="fas fa-lock" style="color:var(--text-muted);margin-right:6px;font-size:0.8rem"></i>' : ''}${lesson.title}</div>
-        <div class="bento-desc" style="margin-bottom:1rem">${lesson.challenge_type.replace(/_/g, ' ')}</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto">
-          <span class="bento-desc" style="font-family:var(--font-mono);font-size:0.75rem">+${lesson.xp_reward} XP</span>
-          ${completed ? `<span style="color:var(--accent-emerald);font-family:var(--font-mono);font-size:0.75rem">${score}%</span>` : locked ? `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.75rem">Locked</span>` : `<a href="/lesson?id=${lesson.id}" class="neon-btn neon-btn-sm">Start</a>`}
-        </div>
-        ${completed ? `<div style="width:100%;height:4px;background:var(--glass-bg);border-radius:9999px;margin-top:0.75rem;overflow:hidden"><div style="width:${score}%;height:100%;background:var(--accent-emerald);border-radius:9999px"></div></div>` : ''}
-      `;
+
+      card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem"><span class="badge ' + (completed ? 'badge-emerald' : 'badge-muted') + '">Level ' + lesson.level_number + '</span><span class="badge badge-lime">' + lesson.difficulty + '</span></div><div class="bento-title" style="font-size:1.1rem">' + (locked ? '<i class="fas fa-lock" style="color:var(--text-muted);margin-right:6px;font-size:0.8rem"></i>' : '') + lesson.title + '</div><div class="bento-desc" style="margin-bottom:1rem">' + lesson.challenge_type.replace(/_/g, ' ') + '</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto"><span class="bento-desc" style="font-family:var(--font-mono);font-size:0.75rem">+' + lesson.xp_reward + ' XP</span>' + (completed ? '<span style="color:var(--accent-emerald);font-family:var(--font-mono);font-size:0.75rem">' + score + '%</span>' : locked ? '<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.75rem">Locked</span>' : '<a href="/lesson?id=' + lesson.id + '" class="neon-btn neon-btn-sm">Start</a>') + '</div>' + (completed ? '<div style="width:100%;height:4px;background:var(--glass-bg);border-radius:9999px;margin-top:0.75rem;overflow:hidden"><div style="width:' + score + '%;height:100%;background:var(--accent-emerald);border-radius:9999px"></div></div>' : '');
       levelsGrid.appendChild(card);
     });
 
     container.appendChild(levelsGrid);
   } catch (err) {
-    container.innerHTML = `<div class="bento-card" style="text-align:center;padding:3rem"><div class="bento-desc">Failed to load lessons: ${err.message}</div></div>`;
+    container.innerHTML = '<div class="bento-card" style="text-align:center;padding:3rem"><div class="bento-desc">Failed to load lessons: ' + err.message + '</div></div>';
   }
 }
 
@@ -163,6 +193,13 @@ async function loadLessonDetail() {
 
     const data = await api.get(`/lessons/${lessonId}`);
     const lesson = data.lesson;
+
+    const backLink = document.createElement('a');
+    backLink.href = '/lessons?language=' + lesson.language;
+    backLink.className = 'glass-btn';
+    backLink.style.cssText = 'margin-bottom:1.5rem;display:inline-flex;font-size:0.75rem;padding:0.4rem 0.75rem';
+    backLink.innerHTML = '<i class="fas fa-arrow-left"></i> Back to ' + lesson.language.toUpperCase() + ' Levels';
+    container.appendChild(backLink);
 
     container.innerHTML = `
       <div class="bento-card" style="margin-bottom:1.5rem">
