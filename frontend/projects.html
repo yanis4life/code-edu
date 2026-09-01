@@ -179,7 +179,7 @@ async function loadProjects() {
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:auto">
           ${p.deployed && isWebService ? `<a href="${p.live_url}" target="_blank" class="neon-btn neon-btn-sm" style="font-size:0.65rem"><i class="fas fa-external-link-alt"></i> Live</a>` : ''}
           ${isWebService && isOwner ? `<button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem" onclick="deployProject(${p.id})"><i class="fas fa-rocket"></i> Deploy</button>` : ''}
-          ${!isWebService ? `<a href="/api/v1/projects/${p.id}/download" class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem"><i class="fas fa-download"></i> Download</a>` : ''}
+          ${p.source_code || (JSON.parse(p.files_json || '[]').length > 0) ? `<a href="/api/v1/projects/${p.id}/download" class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem"><i class="fas fa-download"></i> Download</a>` : ''}
           ${isOwner ? `<button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem;border-color:#ff6b6b;color:#ff6b6b" onclick="deleteProject(${p.id})"><i class="fas fa-trash"></i></button>` : ''}
         </div>
       `;

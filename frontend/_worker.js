@@ -111,8 +111,15 @@ async function handleApi(request, env) {
       const lang = url.searchParams.get('language') || 'python';
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '100'), 100);
       const au = await auth().catch(() => null);
-      const lessons = await db.prepare('SELECT l.id, l.language, l.level_number, l.title, l.difficulty, l.xp_reward, l.challenge_type, COALESCE(up.completed, 0) as completed, COALESCE(up.score, 0) as score FROM lessons l LEFT JOIN user_progress up ON l.id = up.lesson_id AND up.user_id = ? WHERE l.language = ? AND l.is_active = 1 ORDER BY l.level_number ASC LIMIT ?').bind(au ? au.id : 0, lang, limit).all();
-      return j({ lessons: lessons.results, language: lang });
+      const userId = au ? au.id : 0;
+      const lessons = await db.prepare('SELECT l.id, l.language, l.level_number, l.title, l.difficulty, l.xp_reward, l.challenge_type, COALESCE(up.completed, 0) as completed, COALESCE(up.score, 0) as score FROM lessons l LEFT JOIN user_progress up ON l.id = up.lesson_id AND up.user_id = ? WHERE l.language = ? AND l.is_active = 1 ORDER BY l.level_number ASC LIMIT ?').bind(userId, lang, limit).all();
+      const result = lessons.results.map((l, i, arr) => {
+        if (l.level_number === 1) return { ...l, locked: false };
+        const prev = arr[i - 1];
+        if (prev && prev.completed) return { ...l, locked: false };
+        return { ...l, locked: l.completed ? false : true };
+      });
+      return j({ lessons: result, language: lang });
     }
 
     if (path.match(/^lessons\/\d+$/) && method === 'GET') {

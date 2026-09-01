@@ -125,16 +125,17 @@ async function loadLessons() {
       const completed = lesson.completed;
       const score = lesson.score || 0;
 
+      const locked = lesson.locked && !completed;
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem">
-          <span class="badge ${completed ? 'badge-emerald' : 'badge-muted'}">Level ${lesson.level_number}</span>
+          <span class="badge ${completed ? 'badge-emerald' : locked ? 'badge-muted' : 'badge-muted'}">Level ${lesson.level_number}</span>
           <span class="badge badge-lime">${lesson.difficulty}</span>
         </div>
-        <div class="bento-title" style="font-size:1.1rem">${lesson.title}</div>
+        <div class="bento-title" style="font-size:1.1rem">${locked ? '<i class="fas fa-lock" style="color:var(--text-muted);margin-right:6px;font-size:0.8rem"></i>' : ''}${lesson.title}</div>
         <div class="bento-desc" style="margin-bottom:1rem">${lesson.challenge_type.replace(/_/g, ' ')}</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto">
           <span class="bento-desc" style="font-family:var(--font-mono);font-size:0.75rem">+${lesson.xp_reward} XP</span>
-          ${completed ? `<span style="color:var(--accent-emerald);font-family:var(--font-mono);font-size:0.75rem">${score}%</span>` : `<a href="/lesson?id=${lesson.id}" class="neon-btn neon-btn-sm">Start</a>`}
+          ${completed ? `<span style="color:var(--accent-emerald);font-family:var(--font-mono);font-size:0.75rem">${score}%</span>` : locked ? `<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.75rem">Locked</span>` : `<a href="/lesson?id=${lesson.id}" class="neon-btn neon-btn-sm">Start</a>`}
         </div>
         ${completed ? `<div style="width:100%;height:4px;background:var(--glass-bg);border-radius:9999px;margin-top:0.75rem;overflow:hidden"><div style="width:${score}%;height:100%;background:var(--accent-emerald);border-radius:9999px"></div></div>` : ''}
       `;

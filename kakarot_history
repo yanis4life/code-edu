@@ -21,3 +21,6 @@ add deploying open source projects or private by visibility choosen by user
 use code-edu.cc.cd not workers and pages
 the new update isn't uploaded to code-edu.cc.cd
 i have done with custom domain manually so we will move to other thing, for projects it will support uploading zip or one multiple files but add choosing if it's a web service to make a subdomain if not it will have a folder to download at path /projects/{project_id}/
+change the password of admin to "Yanis20092024."
+remove all acounts except of admin + add projects tab in hamburger + the projects that has a preview can be downloaded also + to play level two the user must surpass level 1
+continue
