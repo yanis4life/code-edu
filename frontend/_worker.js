@@ -135,8 +135,10 @@ async function handleApi(request, env) {
       const lesson = await db.prepare('SELECT * FROM lessons WHERE id = ? AND is_active = 1').bind(lid).first();
       if (!lesson) return e('Not found', 404);
       let correct = false, score = 0;
-      if (lesson.challenge_type === 'true_false' || lesson.challenge_type === 'multiple_choice') {
-        correct = String(bd.answer).trim().toLowerCase() === String(lesson.correct_answer).trim().toLowerCase(); score = correct ? 100 : 0;
+      if (lesson.challenge_type === 'true_false' || lesson.challenge_type === 'multiple_choice' || lesson.challenge_type === 'predict_output') {
+        const userAns = String(bd.answer !== undefined ? bd.answer : bd.code).trim();
+        const correctAns = String(lesson.correct_answer).trim();
+        correct = userAns.toLowerCase() === correctAns.toLowerCase(); score = correct ? 100 : 0;
       } else {
         const uc = (bd.code || '').replace(/\s+/g, ''); const cc = (lesson.correct_answer || '').replace(/\s+/g, '');
         correct = uc === cc; score = correct ? 100 : Math.max(0, 100 - Math.abs(uc.length - cc.length) * 5);
