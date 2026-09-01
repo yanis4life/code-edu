@@ -11,3 +11,4 @@ in sign in Unexpected end of JSON input
 co'tinue
 continje
 now i got two errors, when clicking website name in header it loses the session, when i click profile it don't load, when i submit a correct answer i need to make it showing go to next level not submit answer also
+i get Unauthorized when i want to update my profile + fix the light theme colors

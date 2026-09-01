@@ -29,29 +29,30 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    try {
+    const doFetch = async () => {
       const response = await fetch(url, { ...options, headers });
       const data = await response.json();
+      if (!response.ok) throw { status: response.status, message: data.error || 'Request failed', code: data.code };
+      return data;
+    };
 
-      if (response.status === 401 && data.code === 'TOKEN_EXPIRED' && this.refreshToken) {
+    try {
+      return await doFetch();
+    } catch (err) {
+      if (err.status === 401 && this.refreshToken) {
         const refreshed = await this.refreshAccessToken();
         if (refreshed) {
           headers['Authorization'] = `Bearer ${this.token}`;
-          const retryResponse = await fetch(url, { ...options, headers });
-          return retryResponse.json();
+          try {
+            return await doFetch();
+          } catch (retryErr) {
+            throw new Error(retryErr.message || 'Request failed');
+          }
         }
+        this.clearTokens();
+        throw new Error('Session expired. Please login again.');
       }
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Request failed');
-      }
-
-      return data;
-    } catch (err) {
-      if (err.message === 'Failed to fetch') {
-        throw new Error('Network error. Please check your connection.');
-      }
-      throw err;
+      throw new Error(err.message || 'Request failed');
     }
   }
 
@@ -67,10 +68,8 @@ class ApiClient {
         this.setTokens(data.accessToken, data.refreshToken);
         return true;
       }
-      this.clearTokens();
       return false;
     } catch {
-      this.clearTokens();
       return false;
     }
   }
