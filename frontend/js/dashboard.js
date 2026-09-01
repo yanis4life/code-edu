@@ -103,7 +103,8 @@ const languages = [
   { id: 'java', name: 'Java', icon: 'fa-brands fa-java', desc: '100 levels from OOP to advanced', color: '#ED8B00' },
   { id: 'sql', name: 'SQL', icon: 'fa-solid fa-database', desc: '100 levels from queries to advanced', color: '#4479A1' },
   { id: 'xml', name: 'XML', icon: 'fa-solid fa-code', desc: '100 levels from markup to mastery', color: '#0060AC' },
-  { id: 'php', name: 'PHP', icon: 'fa-brands fa-php', desc: '100 levels from web scripts to advanced', color: '#777BB3' }
+  { id: 'php', name: 'PHP', icon: 'fa-brands fa-php', desc: '100 levels from web scripts to advanced', color: '#777BB3' },
+  { id: 'kotlin', name: 'Kotlin', icon: 'fa-brands fa-android', desc: '100 levels from basics to coroutines', color: '#7F52FF' }
 ];
 
 async function loadLessons() {
