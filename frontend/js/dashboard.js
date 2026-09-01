@@ -254,7 +254,7 @@ async function loadLessonDetail() {
           <div id="submitArea" style="display:flex;gap:1rem;flex-wrap:wrap">
             ${lesson.challenge_template ? '<button class="neon-btn" onclick="submitCode()" id="submitBtn">Submit Code</button>' : ''}
             ${lesson.challenge_type === 'predict_output' ? '<button class="neon-btn" onclick="submitPredict()" id="predictBtn">Submit Prediction</button>' : ''}
-            ${lesson.hint ? `<button class="glass-btn" onclick="showHint('${escapeHtml(lesson.hint)}')" id="hintBtn">Get Hint</button>` : ''}
+            ${lesson.hint ? `<button class="glass-btn" onclick="showHint('${escapeHtml(lesson.hint)}')" id="hintBtn">Get Hint (-10 XP)</button>` : ''}
           </div>
         </div>
       </div>
@@ -376,10 +376,17 @@ async function submitPredict() {
   }
 }
 
-function showHint(hint) {
+async function showHint(hint) {
   const resultDiv = document.getElementById('lessonResult');
+  const lessonId = new URLSearchParams(window.location.search).get('id');
   resultDiv.style.display = 'block';
-  resultDiv.innerHTML = `<div class="bento-card" style="padding:1rem"><div class="bento-desc">Hint: ${hint}</div></div>`;
+  resultDiv.innerHTML = '<div class="loading-spinner"></div>';
+  try {
+    const data = await api.post('/lessons/' + lessonId + '/hint');
+    resultDiv.innerHTML = '<div class="bento-card" style="padding:1rem;border-color:var(--accent-lime)"><div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem"><i class="fas fa-lightbulb" style="color:var(--accent-lime);font-size:1.2rem"></i><span class="bento-title" style="font-size:1rem">Hint</span></div><div class="bento-desc">' + hint + '</div><div class="bento-desc" style="margin-top:0.5rem;color:var(--accent-lime);font-family:var(--font-mono);font-size:0.75rem">-10 XP used</div></div>';
+  } catch (err) {
+    resultDiv.innerHTML = '<div class="bento-card" style="padding:1rem;border-color:#ff6b6b"><div class="bento-desc" style="color:#ff6b6b">' + err.message + '</div></div>';
+  }
 }
 
 async function loadLeaderboard() {

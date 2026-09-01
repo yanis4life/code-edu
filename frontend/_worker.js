@@ -156,6 +156,17 @@ async function handleApi(request, env) {
       return j({ isCorrect: correct, score, xpEarned: correct ? lesson.xp_reward : 0, hint: !correct && lesson.hint ? lesson.hint : null, nextLessonId: correct && nextLesson ? nextLesson.id : null, nextLevel: correct && nextLesson ? nextLesson.level_number : null });
     }
 
+    if (path.match(/^lessons\/\d+\/hint$/) && method === 'POST') {
+      const u = await auth(); if (!u) return e('Unauthorized', 401);
+      const lid = parseInt(path.split('/')[1]);
+      const lesson = await db.prepare('SELECT * FROM lessons WHERE id = ? AND is_active = 1').bind(lid).first();
+      if (!lesson) return e('Not found', 404);
+      if (!lesson.hint) return e('No hint available', 404);
+      if ((u.xp || 0) < 10) return e('Not enough XP. You need 10 XP.', 400);
+      await db.prepare('UPDATE users SET xp = xp - 10 WHERE id = ?').bind(u.id).run();
+      return j({ hint: lesson.hint, xpCost: 10, remainingXp: (u.xp || 0) - 10 });
+    }
+
     if (path === 'leaderboard' && method === 'GET') {
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
       const users = await db.prepare('SELECT id, username, display_name, avatar_url, xp, level, streak, role FROM users WHERE banned = 0 ORDER BY xp DESC LIMIT ?').bind(limit).all();
