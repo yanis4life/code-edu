@@ -198,16 +198,30 @@ async function loadLessonDetail() {
     backLink.href = '/lessons?language=' + lesson.language;
     backLink.className = 'glass-btn';
     backLink.style.cssText = 'margin-bottom:1rem;display:inline-flex;font-size:0.75rem;padding:0.4rem 0.75rem';
-    backLink.innerHTML = '<i class="fas fa-arrow-left"></i> ' + lesson.language.toUpperCase() + ' Level ' + lesson.level_number;
+    backLink.innerHTML = '<i class="fas fa-arrow-left"></i> ' + lesson.language.toUpperCase() + ' Levels';
     container.appendChild(backLink);
 
-    const mainCard = document.createElement('div');
-    mainCard.className = 'bento-card';
-    mainCard.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><div><div class="section-label">Level ' + lesson.level_number + ' - ' + lesson.difficulty + '</div><h2 class="section-title" style="font-size:1.3rem">' + lesson.title + '</h2></div><span class="badge badge-lime">+' + lesson.xp_reward + ' XP</span></div><div class="bento-desc" style="margin-bottom:1rem;cursor:pointer" id="theoryToggle" onclick="toggleTheory()"><i class="fas fa-chevron-right" id="theoryIcon" style="margin-right:6px;font-size:0.7rem;transition:transform 0.2s"></i> Show Theory</div><div id="theoryContent" style="display:none;margin-bottom:1rem;padding:1rem;background:var(--bg-viewport);border-radius:var(--radius-sm)"><div class="bento-desc" style="line-height:1.8">' + lesson.theory_text + '</div>' + (lesson.code_example ? '<div style="margin-top:1rem;padding:1rem;background:var(--bg-shell);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:0.8rem;line-height:1.8;overflow-x:auto"><pre style="color:var(--text-secondary)">' + escapeHtml(lesson.code_example) + '</pre></div>' : '') + '</div><div class="section-label" style="margin-bottom:0.5rem">Challenge</div><h3 class="bento-title" style="font-size:1rem;margin-bottom:0.75rem">' + lesson.challenge_type.replace(/_/g, ' ') + '</h3><div class="bento-desc" style="margin-bottom:1rem">' + lesson.challenge_description + '</div><div id="challengeArea">' + (lesson.challenge_template ? '<div style="background:var(--bg-viewport);border-radius:var(--radius-sm);padding:0.75rem;margin-bottom:1rem"><textarea id="codeEditor" class="form-input" style="font-family:var(--font-mono);font-size:0.85rem;min-height:180px;resize:vertical;background:transparent;border:none;outline:none;color:var(--text-primary);padding:0" spellcheck="false">' + escapeHtml(lesson.challenge_template) + '</textarea></div>' : '') + (lesson.challenge_type === 'true_false' ? '<div style="display:flex;gap:1rem;margin-bottom:1rem"><button class="glass-btn" onclick="submitAnswer(\'true\')" style="flex:1;justify-content:center">True</button><button class="glass-btn" onclick="submitAnswer(\'false\')" style="flex:1;justify-content:center">False</button></div>' : '') + (lesson.challenge_type === 'predict_output' ? '<div style="margin-bottom:1rem"><label class="form-label">Your Answer</label><input type="text" id="predictInput" class="form-input" placeholder="Type your answer here..."></div>' : '') + (lesson.challenge_type === 'multiple_choice' ? '<div id="mcOptions" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem"></div>' : '') + '<div id="lessonResult" style="display:none;margin:1rem 0"></div><div id="submitArea" style="display:flex;gap:0.75rem;flex-wrap:wrap">' + (lesson.challenge_template ? '<button class="neon-btn" onclick="submitCode()" id="submitBtn">Submit</button>' : '') + (lesson.challenge_type === 'predict_output' ? '<button class="neon-btn" onclick="submitPredict()" id="predictBtn">Submit</button>' : '') + (lesson.hint ? '<button class="glass-btn" onclick="showHint(\'' + escapeHtml(lesson.hint) + '\')" id="hintBtn">Hint (-10 XP)</button>' : '') + '</div></div>';
-    container.appendChild(mainCard);
+    const header = document.createElement('div');
+    header.className = 'bento-card';
+    header.style.cssText = 'margin-bottom:1rem;padding:1.25rem 1.5rem';
+    header.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem"><div><div class="section-label">Level ' + lesson.level_number + ' - ' + lesson.difficulty + '</div><h2 class="section-title" style="font-size:1.5rem">' + lesson.title + '</h2></div><span class="badge badge-lime">+' + lesson.xp_reward + ' XP</span></div>';
+    container.appendChild(header);
+
+    const theoryCard = document.createElement('div');
+    theoryCard.className = 'bento-card';
+    theoryCard.style.cssText = 'margin-bottom:1rem';
+    theoryCard.innerHTML = '<div class="section-label" style="margin-bottom:0.75rem">Learn</div><h3 class="bento-title" style="font-size:1.1rem;margin-bottom:0.75rem">' + lesson.title + '</h3><div class="bento-desc" style="line-height:1.8;margin-bottom:1rem">' + lesson.theory_text + '</div>' + (lesson.code_example ? '<div style="padding:1rem;background:var(--bg-viewport);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:0.8rem;line-height:1.8;overflow-x:auto;margin-bottom:1rem"><pre style="color:var(--text-secondary)">' + escapeHtml(lesson.code_example) + '</pre></div>' : '') + '<button class="neon-btn" onclick="startPractice()" id="startPracticeBtn">Start Practice <i class="fas fa-arrow-right"></i></button>';
+    container.appendChild(theoryCard);
+
+    const practiceCard = document.createElement('div');
+    practiceCard.className = 'bento-card';
+    practiceCard.id = 'practiceCard';
+    practiceCard.style.display = 'none';
+    practiceCard.innerHTML = '<div class="section-label" style="margin-bottom:0.75rem">Practice</div><h3 class="bento-title" style="font-size:1.1rem;margin-bottom:0.5rem">' + lesson.challenge_type.replace(/_/g, ' ') + '</h3><div class="bento-desc" style="margin-bottom:1rem">' + lesson.challenge_description + '</div><div id="challengeArea">' + (lesson.challenge_template ? '<div style="background:var(--bg-viewport);border-radius:var(--radius-sm);padding:0.75rem;margin-bottom:1rem"><textarea id="codeEditor" class="form-input" style="font-family:var(--font-mono);font-size:0.85rem;min-height:180px;resize:vertical;background:transparent;border:none;outline:none;color:var(--text-primary);padding:0" spellcheck="false">' + escapeHtml(lesson.challenge_template) + '</textarea></div>' : '') + (lesson.challenge_type === 'true_false' ? '<div style="display:flex;gap:1rem;margin-bottom:1rem"><button class="glass-btn" onclick="submitAnswer(\'true\')" style="flex:1;justify-content:center">True</button><button class="glass-btn" onclick="submitAnswer(\'false\')" style="flex:1;justify-content:center">False</button></div>' : '') + (lesson.challenge_type === 'predict_output' ? '<div style="margin-bottom:1rem"><label class="form-label">Your Answer</label><input type="text" id="predictInput" class="form-input" placeholder="Type your answer here..."></div>' : '') + (lesson.challenge_type === 'multiple_choice' ? '<div id="mcOptions" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem"></div>' : '') + '<div id="lessonResult" style="display:none;margin:1rem 0"></div><div id="submitArea" style="display:flex;gap:0.75rem;flex-wrap:wrap">' + (lesson.challenge_template ? '<button class="neon-btn" onclick="submitCode()" id="submitBtn">Submit</button>' : '') + (lesson.challenge_type === 'predict_output' ? '<button class="neon-btn" onclick="submitPredict()" id="predictBtn">Submit</button>' : '') + (lesson.hint ? '<button class="glass-btn" onclick="showHint(\'' + escapeHtml(lesson.hint) + '\')" id="hintBtn">Hint (-10 XP)</button>' : '') + '</div></div>';
+    container.appendChild(practiceCard);
 
     if (lesson.challenge_type === 'multiple_choice' && lesson.challenge_template) {
-      const options = lesson.challenge_template.split('\n').filter(l => l.trim());
+      const options = lesson.challenge_template.split('\n').filter(function(l) { return l.trim(); });
       const mcContainer = document.getElementById('mcOptions');
       options.forEach(function(opt) {
         const btn = document.createElement('button');
@@ -322,7 +336,13 @@ async function submitPredict() {
   }
 }
 
-async function toggleTheory() {
+async function startPractice() {
+  document.getElementById('practiceCard').style.display = 'block';
+  document.getElementById('startPracticeBtn').style.display = 'none';
+  document.getElementById('practiceCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleTheory() {
   const content = document.getElementById('theoryContent');
   const icon = document.getElementById('theoryIcon');
   if (!content || !icon) return;
