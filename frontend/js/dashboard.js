@@ -338,10 +338,10 @@ async function loadLeaderboard() {
         <div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem;border-bottom:1px solid var(--glass-border);${isCurrentUser ? 'background:rgba(204,255,0,0.05)' : ''}">
           <span style="font-family:var(--font-mono);font-size:1.25rem;font-weight:700;color:${rank <= 3 ? 'var(--accent-lime)' : 'var(--text-muted)'};width:2rem">#${rank}</span>
           <div style="width:40px;height:40px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.8rem;overflow:hidden">
-            ${user.avatar_url ? `<img src="${user.avatar_url}" style="width:100%;height:100%;object-fit:cover">` : user.username.charAt(0).toUpperCase()}
+            ${user.avatar_url ? `<img src="${user.avatar_url}" style="width:100%;height:100%;object-fit:cover">` : (user.role === "admin" ? `<i class="fas fa-shield-alt" style="color:var(--accent-lime);font-size:1rem"></i>` : user.username.charAt(0).toUpperCase())}
           </div>
           <div style="flex:1">
-            <div style="font-weight:600">${user.display_name || user.username}</div>
+            <div style="font-weight:600">${user.role === "admin" ? `<i class="fas fa-shield-alt" style="color:var(--accent-lime);margin-right:4px;font-size:0.7rem"></i>` : ""}${user.display_name || user.username}</div>
             <div style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted)">Level ${user.level}</div>
           </div>
           <div style="text-align:right">
@@ -386,8 +386,8 @@ async function loadProfile() {
             ${user.avatar_url ? `<img src="${user.avatar_url}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-family:var(--font-heading);font-size:2.5rem;color:var(--accent-lime)">${(user.display_name || user.username).charAt(0).toUpperCase()}</span>`}
           </div>
           <div style="flex:1">
-            <h2 class="section-title" style="font-size:2rem">${user.display_name || user.username}</h2>
-            <div style="font-family:var(--font-mono);color:var(--text-secondary);font-size:0.85rem">@${user.username}</div>
+            <h2 class="section-title" style="font-size:2rem">${user.role === "admin" ? `<i class="fas fa-shield-alt" style="color:var(--accent-lime);margin-right:6px;font-size:1.2rem"></i>` : ""}${user.display_name || user.username}</h2>
+            <div style="font-family:var(--font-mono);color:var(--text-secondary);font-size:0.85rem">${user.role === "admin" ? `<span class="badge badge-lime" style="margin-right:0.5rem">admin</span>` : ""}@${user.username}</div>
             ${user.bio ? `<div class="bento-desc" style="margin-top:0.5rem">${user.bio}</div>` : ''}
             <div style="display:flex;gap:1.5rem;margin-top:1rem;flex-wrap:wrap">
               <div><span style="font-family:var(--font-mono);font-weight:700;color:var(--accent-lime)">${formatXp(user.xp || 0)}</span> <span class="bento-desc">XP</span></div>
@@ -459,7 +459,7 @@ async function loadSearch() {
       if (data.results.users.length > 0) {
         container.innerHTML += `<div class="section-label" style="margin:1rem 0 0.5rem">Users</div>`;
         data.results.users.slice(0, 5).forEach(u => {
-          container.innerHTML += `<div class="bento-card" style="padding:0.75rem 1rem;margin-bottom:0.5rem;cursor:pointer" onclick="window.location.href='/profile?username=${u.username}'"><div class="bento-title" style="font-size:0.95rem">${u.display_name || u.username}</div><div class="bento-desc" style="font-size:0.75rem">Level ${u.level} - ${formatXp(u.xp)} XP</div></div>`;
+          container.innerHTML += `<div class="bento-card" style="padding:0.75rem 1rem;margin-bottom:0.5rem;cursor:pointer" onclick="window.location.href='/profile?username=${u.username}'"><div class="bento-title" style="font-size:0.95rem">${u.role === "admin" ? `<i class="fas fa-shield-alt" style="color:var(--accent-lime);margin-right:4px;font-size:0.7rem"></i>` : ""}${u.display_name || u.username}</div><div class="bento-desc" style="font-size:0.75rem">Level ${u.level} - ${formatXp(u.xp)} XP</div></div>`;
         });
       }
 

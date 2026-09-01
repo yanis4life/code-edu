@@ -149,7 +149,7 @@ async function handleApi(request, env) {
 
     if (path === 'leaderboard' && method === 'GET') {
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
-      const users = await db.prepare('SELECT id, username, display_name, avatar_url, xp, level, streak FROM users WHERE banned = 0 ORDER BY xp DESC LIMIT ?').bind(limit).all();
+      const users = await db.prepare('SELECT id, username, display_name, avatar_url, xp, level, streak, role FROM users WHERE banned = 0 ORDER BY xp DESC LIMIT ?').bind(limit).all();
       return j({ users: users.results });
     }
 
@@ -183,7 +183,7 @@ async function handleApi(request, env) {
       const t = '%' + q.trim() + '%';
       const r = { lessons: [], users: [] };
       r.lessons = (await db.prepare('SELECT id, title, language, difficulty, level_number FROM lessons WHERE is_active = 1 AND (title LIKE ? OR theory_text LIKE ?) LIMIT 10').bind(t, t).all()).results;
-      r.users = (await db.prepare('SELECT id, username, display_name, avatar_url, xp, level FROM users WHERE banned = 0 AND (username LIKE ? OR display_name LIKE ?) LIMIT 10').bind(t, t).all()).results;
+      r.users = (await db.prepare('SELECT id, username, display_name, avatar_url, xp, level, role FROM users WHERE banned = 0 AND (username LIKE ? OR display_name LIKE ?) LIMIT 10').bind(t, t).all()).results;
       return j({ results: r, query: q.trim() });
     }
 

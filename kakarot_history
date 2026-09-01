@@ -15,3 +15,4 @@ i get Unauthorized when i want to update my profile + fix the light theme colors
 when i want to update profile picture Unrecognized Content-Type header value. FormData can only parse the following MIME types: multipart/form-data, application/x-www-form-urlencoded
 the profile picture isn't rendering
 now make the header in a hamburger + minus some of lights and animations not too much but minus
+make the account with username @admin admin in the platform + add like a shield in front of the name in leaderboard ...etc

@@ -12,12 +12,21 @@ function initAuth() {
       userMenu.style.display = 'flex';
       if (authButtons) authButtons.style.display = 'none';
       const usernameEl = userMenu.querySelector('.user-menu-name');
+      if (user && user.role === 'admin' && usernameEl) usernameEl.innerHTML = '<i class="fas fa-shield-alt" style="color:var(--accent-lime);margin-right:4px;font-size:0.75rem"></i>' + (user.display_name || user.username);
       const avatarEl = userMenu.querySelector('.user-menu-avatar');
       if (usernameEl) usernameEl.textContent = user.display_name || user.username;
       if (avatarEl) {
         avatarEl.src = user.avatar_url || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%23ccff00"/><text x="16" y="20" text-anchor="middle" fill="%23000" font-size="14" font-family="sans-serif">' + user.username.charAt(0).toUpperCase() + '</text></svg>';
       }
       const xpEl = userMenu.querySelector('.user-menu-xp');
+      const mobileUser = document.getElementById('mobileUser');
+      if (mobileUser && user) {
+        mobileUser.style.display = 'flex';
+        const img = mobileUser.querySelector('img');
+        const name = mobileUser.querySelector('span');
+        if (img) img.src = user.avatar_url || '';
+        if (name) name.innerHTML = (user.role === 'admin' ? '<i class="fas fa-shield-alt" style="color:var(--accent-lime);margin-right:4px;font-size:0.7rem"></i>' : '') + (user.display_name || user.username);
+      }
       if (xpEl) xpEl.textContent = `Level ${user.level || 1} - ${formatXp(user.xp || 0)} XP`;
     } else if (userMenu) {
       userMenu.style.display = 'none';
