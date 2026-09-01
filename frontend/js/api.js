@@ -134,4 +134,4 @@ class ApiClient {
   }
 }
 
-const api = new ApiClient();
+var api = new ApiClient();
