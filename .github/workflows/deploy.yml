@@ -10,48 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install wrangler
-        run: npm install -g wrangler
-
-      - name: Detect schema or seed changes
-        id: changes
-        run: |
-          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
-            echo "seed=true" >> "$GITHUB_OUTPUT"
-          else
-            if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" \
-               | grep -qE '^(schema\.sql|python/seed_lessons\.sql)';
-            then echo "seed=true" >> "$GITHUB_OUTPUT"
-            else echo "seed=false" >> "$GITHUB_OUTPUT"
-            fi
-          fi
-
-      - name: Apply D1 schema
-        if: steps.changes.outputs.seed == 'true'
-        run: wrangler d1 execute code-edu-db --remote --file=schema.sql
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-
-      - name: Reseed curriculum
-        if: steps.changes.outputs.seed == 'true'
-        run: wrangler d1 execute code-edu-db --remote --file=python/seed_lessons.sql
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Deploy to Cloudflare Pages
-        run: wrangler pages deploy frontend --project-name code-edu --branch main
+        run: npx wrangler@3 pages deploy frontend --project-name code-edu --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Verify
-        run: curl -s -o /dev/null -w "%{http_code}" https://code-edu.cc.cd
+        run: curl -sI https://code-edu.cc.cd | head -5
