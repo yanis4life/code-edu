@@ -414,9 +414,37 @@ async function handleApi(request, env) {
 
     if (path === 'projects' && method === 'POST') {
       const u = await auth(); if (!u) return e('Unauthorized', 401);
-      const bd = await request.json();
-      if (!bd.name) return e('Name required');
-      await db.prepare('INSERT INTO projects (user_id, name, description, language, visibility, source_code) VALUES (?, ?, ?, ?, ?, ?)').bind(u.id, bd.name, bd.description || '', bd.language || 'javascript', bd.visibility || 'public', bd.sourceCode || '').run();
+      const ct = request.headers.get('Content-Type') || '';
+      let name, desc, ptype, lang, vis, code, files;
+      if (ct.includes('multipart/form-data')) {
+        const fd = await request.formData();
+        name = fd.get('name');
+        desc = fd.get('description') || '';
+        ptype = fd.get('projectType') || 'web_service';
+        lang = fd.get('language') || 'javascript';
+        vis = fd.get('visibility') || 'public';
+        code = fd.get('sourceCode') || '';
+        const fileEntries = [];
+        for (const entry of fd.entries()) {
+          if (entry[0] === 'file' && entry[1] instanceof File) {
+            const buf = await entry[1].arrayBuffer();
+            const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+            fileEntries.push({ name: entry[1].name, content: b64, type: entry[1].type, size: buf.byteLength });
+          }
+        }
+        files = JSON.stringify(fileEntries);
+      } else {
+        const bd = await request.json();
+        name = bd.name;
+        desc = bd.description || '';
+        ptype = bd.projectType || 'web_service';
+        lang = bd.language || 'javascript';
+        vis = bd.visibility || 'public';
+        code = bd.sourceCode || '';
+        files = JSON.stringify(bd.files || []);
+      }
+      if (!name) return e('Name required');
+      await db.prepare('INSERT INTO projects (user_id, name, description, project_type, language, visibility, source_code, files_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(u.id, name, desc, ptype, lang, vis, code, files).run();
       return j({ message: 'Created' }, 201);
     }
 
