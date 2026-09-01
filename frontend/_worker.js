@@ -7,6 +7,14 @@ export default {
     if (url.pathname.startsWith('/api/')) {
       return handleApi(request, env);
     }
+    if (url.pathname.startsWith('/avatars/') && env.R2_STORAGE) {
+      const key = url.pathname.slice(1);
+      const obj = await env.R2_STORAGE.get(key);
+      if (obj) {
+        const headers = { 'Content-Type': obj.httpMetadata?.contentType || 'image/webp', 'Cache-Control': 'public, max-age=31536000' };
+        return new Response(obj.body, { headers });
+      }
+    }
     return env.ASSETS.fetch(request);
   }
 };
