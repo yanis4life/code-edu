@@ -16,7 +16,7 @@ function initAuth() {
       const avatarEl = userMenu.querySelector('.user-menu-avatar');
       if (usernameEl) usernameEl.textContent = user.display_name || user.username;
       if (avatarEl) {
-        avatarEl.src = user.avatar_url || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%23ff6b6b"/><text x="16" y="20" text-anchor="middle" fill="%23000" font-size="14" font-family="sans-serif">' + user.username.charAt(0).toUpperCase() + '</text></svg>';
+        avatarEl.src = user.avatar_url || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%2364b5f6"/><text x="16" y="20" text-anchor="middle" fill="%23000" font-size="14" font-family="sans-serif">' + user.username.charAt(0).toUpperCase() + '</text></svg>';
       }
       const xpEl = userMenu.querySelector('.user-menu-xp');
       const mobileUser = document.getElementById('mobileUser');

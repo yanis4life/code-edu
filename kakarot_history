@@ -27,3 +27,4 @@ continue
 api is not defined.
 Failed to load dashboard: D1_ERROR: no such table: user_progress: SQLITE_ERROR
 make the design light red and correct is green
+try light blue
