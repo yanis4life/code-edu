@@ -432,7 +432,8 @@ async function handleApi(request, env) {
       const p = await db.prepare('SELECT * FROM projects WHERE id = ? AND user_id = ?').bind(pid, u.id).first();
       if (!p) return e('Not found', 404);
       const deployId = crypto.randomUUID().slice(0, 8);
-      const liveUrl = p.visibility === 'public' ? `https://${p.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${deployId}.code-edu.pages.dev` : `https://${p.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${deployId}.code-edu.workers.dev`;
+      const slug = p.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const liveUrl = `https://${slug}.code-edu.cc.cd`;
       await db.prepare('UPDATE projects SET deployed = 1, deployment_id = ?, live_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(deployId, liveUrl, pid).run();
       return j({ message: 'Deployed', liveUrl: liveUrl, deploymentId: deployId });
     }
