@@ -23,8 +23,10 @@ class ApiClient {
 
   async request(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`;
-    const headers = { 'Content-Type': 'application/json', ...options.headers };
-
+    const headers = { ...options.headers };
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
@@ -97,7 +99,6 @@ class ApiClient {
     formData.append('file', file);
     return this.request('/upload/avatar', {
       method: 'POST',
-      headers: {},
       body: formData
     });
   }
