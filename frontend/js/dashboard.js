@@ -200,6 +200,13 @@ async function loadLessonDetail() {
             </div>
           ` : ''}
 
+          ${lesson.challenge_type === 'predict_output' ? `
+            <div style="margin-bottom:1rem">
+              <label class="form-label">Your Prediction</label>
+              <input type="text" id="predictInput" class="form-input" placeholder="Type your predicted output here...">
+            </div>
+          ` : ''}
+
           ${lesson.challenge_type === 'multiple_choice' ? `
             <div id="mcOptions" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem">
             </div>
@@ -209,6 +216,7 @@ async function loadLessonDetail() {
 
           <div id="submitArea" style="display:flex;gap:1rem;flex-wrap:wrap">
             ${lesson.challenge_template ? '<button class="neon-btn" onclick="submitCode()" id="submitBtn">Submit Code</button>' : ''}
+            ${lesson.challenge_type === 'predict_output' ? '<button class="neon-btn" onclick="submitPredict()" id="predictBtn">Submit Prediction</button>' : ''}
             ${lesson.hint ? `<button class="glass-btn" onclick="showHint('${escapeHtml(lesson.hint)}')" id="hintBtn">Get Hint</button>` : ''}
           </div>
         </div>
@@ -307,6 +315,27 @@ async function submitAnswer(answer) {
   } catch (err) {
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `<div class="bento-desc" style="color:#ff6b6b">${err.message}</div>`;
+  }
+}
+
+async function submitPredict() {
+  const input = document.getElementById('predictInput');
+  const resultDiv = document.getElementById('lessonResult');
+  const submitArea = document.getElementById('submitArea');
+  const lessonId = new URLSearchParams(window.location.search).get('id');
+  if (!input || !lessonId) return;
+  try {
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div class="loading-spinner"></div>';
+    const data = await api.post('/lessons/' + lessonId + '/submit', { answer: input.value });
+    resultDiv.innerHTML = '<div class="bento-card" style="padding:1rem;' + (data.isCorrect ? 'border-color:var(--accent-emerald)' : 'border-color:#ff6b6b') + '"><div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem"><i class="fas ' + (data.isCorrect ? 'fa-check-circle' : 'fa-times-circle') + '" style="font-size:1.5rem;color:' + (data.isCorrect ? 'var(--accent-emerald)' : '#ff6b6b') + '"></i><span class="bento-title" style="font-size:1.1rem">' + (data.isCorrect ? 'Correct!' : 'Incorrect') + '</span></div><div class="bento-desc">Score: ' + data.score + '%</div>' + (data.xpEarned > 0 ? '<div class="bento-desc" style="color:var(--accent-lime)">+' + data.xpEarned + ' XP earned!</div>' : '') + (data.hint ? '<div class="bento-desc" style="margin-top:0.5rem;padding:0.5rem;background:var(--glass-bg);border-radius:var(--radius-sm)">Hint: ' + data.hint + '</div>' : '') + '</div>';
+    if (data.isCorrect) {
+      if (data.nextLessonId) { submitArea.innerHTML = '<a href="/lesson?id=' + data.nextLessonId + '" class="neon-btn">Next Level ' + data.nextLevel + ' <i class="fas fa-arrow-right"></i></a>'; }
+      else { submitArea.innerHTML = '<a href="/lessons" class="neon-btn">All Levels Complete! <i class="fas fa-trophy"></i></a>'; }
+    }
+  } catch (err) {
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div class="bento-desc" style="color:#ff6b6b">' + err.message + '</div>';
   }
 }
 
