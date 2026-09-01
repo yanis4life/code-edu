@@ -11,10 +11,6 @@ database_id = "d9decac2-d02e-4011-a64e-e1a2d6f0c37d"
 binding = "R2_STORAGE"
 bucket_name = "code-edu-storage"
 
-[[queues.producers]]
-binding = "QUEUE"
-queue = "code-edu-queue"
-
 [vars]
 ENVIRONMENT = "production"
 API_VERSION = "v1"
