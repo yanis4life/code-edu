@@ -72,23 +72,30 @@
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
               <div class="form-group">
-                <label class="form-label">Language</label>
-                <select id="projLang" class="form-input">
-                  <option value="javascript">JavaScript</option>
-                  <option value="python">Python</option>
-                  <option value="html">HTML/CSS</option>
-                  <option value="typescript">TypeScript</option>
+                <label class="form-label">Project Type</label>
+                <select id="projType" class="form-input" onchange="toggleProjectType()">
+                  <option value="web_service">Web Service (subdomain)</option>
+                  <option value="downloadable">Downloadable (files)</option>
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Visibility</label>
                 <select id="projVis" class="form-input">
-                  <option value="public">Public (Open Source)</option>
+                  <option value="public">Public</option>
                   <option value="private">Private</option>
                 </select>
               </div>
             </div>
             <div class="form-group">
+              <label class="form-label">Upload Files</label>
+              <input type="file" id="projFile" class="form-input" style="padding:0.5rem" accept=".zip,.js,.py,.html,.css,.ts,.json">
+              <div class="bento-desc" style="margin-top:0.25rem">Upload a ZIP file or select individual files</div>
+            </div>
+            <div id="fileList" style="display:none;margin-bottom:1rem">
+              <div class="section-label" style="margin-bottom:0.5rem">Files</div>
+              <div id="fileItems" style="display:flex;flex-direction:column;gap:0.25rem"></div>
+            </div>
+            <div class="form-group" id="codeEditorGroup">
               <label class="form-label">Source Code</label>
               <textarea id="projCode" class="form-input" style="min-height:120px;resize:vertical;font-family:var(--font-mono);font-size:0.8rem" placeholder="Paste your source code here..."></textarea>
             </div>
@@ -110,6 +117,29 @@
 <script src="/js/main.js"></script>
 <script src="/js/auth.js"></script>
 <script>
+const uploadedFiles = [];
+
+function toggleProjectType() {
+  const type = document.getElementById('projType').value;
+  document.getElementById('codeEditorGroup').style.display = type === 'web_service' ? 'block' : 'none';
+}
+
+document.getElementById('projFile').addEventListener('change', function(e) {
+  const fileList = document.getElementById('fileList');
+  const fileItems = document.getElementById('fileItems');
+  fileItems.innerHTML = '';
+  uploadedFiles.length = 0;
+
+  for (const file of e.target.files) {
+    uploadedFiles.push(file);
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.75rem;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);font-size:0.8rem';
+    div.innerHTML = '<i class="fas fa-file" style="color:var(--accent-lime);font-size:0.8rem"></i> ' + file.name + ' <span style="color:var(--text-muted);font-size:0.7rem">(' + (file.size / 1024).toFixed(1) + ' KB)</span>';
+    fileItems.appendChild(div);
+  }
+  fileList.style.display = uploadedFiles.length > 0 ? 'block' : 'none';
+});
+
 async function loadProjects() {
   const container = document.getElementById('projectsContent');
   if (!container) return;
@@ -121,7 +151,7 @@ async function loadProjects() {
     container.innerHTML = '';
 
     if (!data.projects || data.projects.length === 0) {
-      container.innerHTML = '<div class="bento-card" style="text-align:center;padding:3rem"><div class="bento-icon" style="font-size:3rem;margin-bottom:1rem"><i class="fas fa-code-branch"></i></div><div class="bento-title" style="font-size:1.5rem;margin-bottom:0.5rem">No Projects Yet</div><div class="bento-desc">Create your first project to deploy it to the cloud.</div></div>';
+      container.innerHTML = '<div class="bento-card" style="text-align:center;padding:3rem"><div class="bento-icon" style="font-size:3rem;margin-bottom:1rem"><i class="fas fa-code-branch"></i></div><div class="bento-title" style="font-size:1.5rem;margin-bottom:0.5rem">No Projects Yet</div><div class="bento-desc">Create your first project to deploy or share it.</div></div>';
       return;
     }
 
@@ -130,20 +160,26 @@ async function loadProjects() {
 
     data.projects.forEach(p => {
       const isOwner = api.getCurrentUser() && api.getCurrentUser().username === p.username;
+      const isWebService = p.project_type === 'web_service';
+      const files = JSON.parse(p.files_json || '[]');
       const card = document.createElement('div');
       card.className = 'bento-card';
       card.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem">
           <span class="badge ${p.visibility === 'public' ? 'badge-emerald' : 'badge-muted'}"><i class="fas ${p.visibility === 'public' ? 'fa-globe' : 'fa-lock'}" style="margin-right:4px"></i>${p.visibility}</span>
-          <span class="badge badge-lime">${p.language}</span>
+          <div style="display:flex;gap:0.5rem">
+            <span class="badge badge-lime">${p.language}</span>
+            <span class="badge ${isWebService ? 'badge-emerald' : 'badge-muted'}"><i class="fas ${isWebService ? 'fa-globe' : 'fa-download'}" style="margin-right:4px"></i>${isWebService ? 'web' : 'files'}</span>
+          </div>
         </div>
         <div class="bento-title" style="font-size:1.1rem">${p.name}</div>
         <div class="bento-desc" style="margin-bottom:0.75rem">${p.description || 'No description'}</div>
-        <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);margin-bottom:0.75rem">by ${p.username || 'unknown'}</div>
-        ${p.deployed ? `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem"><span class="status-dot" style="width:8px;height:8px;background:var(--accent-emerald);animation:none"></span><span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--accent-emerald)">Deployed</span></div>` : ''}
+        <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);margin-bottom:0.75rem">by ${p.username || 'unknown'}${files.length > 0 ? ' - ' + files.length + ' file(s)' : ''}</div>
+        ${p.deployed && isWebService ? `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent-emerald);display:inline-block"></span><span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--accent-emerald)">Deployed</span></div>` : ''}
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:auto">
-          ${p.deployed ? `<a href="${p.live_url}" target="_blank" class="neon-btn neon-btn-sm" style="font-size:0.65rem"><i class="fas fa-external-link-alt"></i> Live</a>` : ''}
-          ${isOwner ? `<button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem" onclick="deployProject(${p.id})"><i class="fas fa-rocket"></i> Deploy</button>` : ''}
+          ${p.deployed && isWebService ? `<a href="${p.live_url}" target="_blank" class="neon-btn neon-btn-sm" style="font-size:0.65rem"><i class="fas fa-external-link-alt"></i> Live</a>` : ''}
+          ${isWebService && isOwner ? `<button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem" onclick="deployProject(${p.id})"><i class="fas fa-rocket"></i> Deploy</button>` : ''}
+          ${!isWebService ? `<a href="/api/v1/projects/${p.id}/download" class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem"><i class="fas fa-download"></i> Download</a>` : ''}
           ${isOwner ? `<button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem;border-color:#ff6b6b;color:#ff6b6b" onclick="deleteProject(${p.id})"><i class="fas fa-trash"></i></button>` : ''}
         </div>
       `;
@@ -164,18 +200,37 @@ function showCreateForm() {
 function hideCreateForm() {
   document.getElementById('createForm').style.display = 'none';
   document.getElementById('projectForm').reset();
+  document.getElementById('fileList').style.display = 'none';
+  uploadedFiles.length = 0;
 }
 
 document.getElementById('projectForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   try {
-    await api.post('/projects', {
-      name: document.getElementById('projName').value,
-      description: document.getElementById('projDesc').value,
-      language: document.getElementById('projLang').value,
-      visibility: document.getElementById('projVis').value,
-      sourceCode: document.getElementById('projCode').value
-    });
+    const formData = new FormData();
+    formData.append('name', document.getElementById('projName').value);
+    formData.append('description', document.getElementById('projDesc').value);
+    formData.append('projectType', document.getElementById('projType').value);
+    formData.append('visibility', document.getElementById('projVis').value);
+
+    if (uploadedFiles.length > 0) {
+      if (uploadedFiles.length === 1 && uploadedFiles[0].name.endsWith('.zip')) {
+        formData.append('file', uploadedFiles[0]);
+      } else {
+        for (const f of uploadedFiles) {
+          formData.append('file', f);
+        }
+      }
+      await api.request('/projects', { method: 'POST', body: formData });
+    } else {
+      await api.post('/projects', {
+        name: document.getElementById('projName').value,
+        description: document.getElementById('projDesc').value,
+        projectType: document.getElementById('projType').value,
+        visibility: document.getElementById('projVis').value,
+        sourceCode: document.getElementById('projCode').value
+      });
+    }
     showToast('Project created', 'success');
     hideCreateForm();
     loadProjects();
