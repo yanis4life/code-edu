@@ -16,8 +16,26 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+<style>
+@keyframes pulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+#loader {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9999; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--bg-viewport);
+  transition: opacity 0.4s ease;
+}
+#loader.hidden { opacity: 0; pointer-events: none; }
+#loader i { font-size: 2.5rem; margin-bottom: 1rem; animation: pulse 1.5s infinite; }
+#loader span { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-secondary); }
+</style>
 </head>
 <body>
+<div id="loader"><i class="fas fa-code"></i><span>Loading lesson...</span></div>
 
   <div class="loader-text">Loading lesson...</div>
 </div>
@@ -155,5 +173,11 @@ async function sendChat() {
 }
 </script>
 
+<script>
+(function(){
+  var l = document.getElementById('loader');
+  if(l){setTimeout(function(){l.classList.add('hidden');setTimeout(function(){l.style.display='none'},400)},1500)}
+})();
+</script>
 </body>
 </html>
