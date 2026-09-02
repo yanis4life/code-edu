@@ -54,7 +54,7 @@ async function loadDashboard() {
     progressBar.innerHTML = `
       <div class="bento-desc" style="margin-bottom:0.5rem">Progress to Level ${(user.level || 1) + 1}</div>
       <div style="width:100%;height:8px;background:var(--glass-bg);border-radius:9999px;overflow:hidden">
-        <div style="width:${xpProgress}%;height:100%;background:var(--accent-lime);border-radius:9999px;transition:width 0.5s ease"></div>
+        <div style="width:${xpProgress}%;height:100%;background:#ffffff;border-radius:9999px;transition:width 0.5s ease"></div>
       </div>
       <div class="bento-desc" style="margin-top:0.5rem;font-family:var(--font-mono);font-size:0.75rem">${formatXp(user.xp || 0)} / ${formatXp(Math.pow(user.level || 1, 2) * 100)} XP</div>
     `;
@@ -472,7 +472,7 @@ async function loadProfile() {
           </div>
         </div>
         <div style="width:100%;height:6px;background:var(--glass-bg);border-radius:9999px;margin-top:1.5rem;overflow:hidden">
-          <div style="width:${xpProgress}%;height:100%;background:var(--accent-lime);border-radius:9999px;transition:width 0.5s ease"></div>
+          <div style="width:${xpProgress}%;height:100%;background:#ffffff;border-radius:9999px;transition:width 0.5s ease"></div>
         </div>
       </div>
 
