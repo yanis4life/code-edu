@@ -555,8 +555,13 @@ async function handleApi(request, env) {
       const u = await auth(); if (!u) return e('Unauthorized', 401);
       const bd = await request.json();
       if (!bd.messages && !bd.message) return e('Messages or message required');
+      if ((u.xp || 0) < 20) return e('Not enough XP. You need 20 XP per message.', 400);
+      const today = new Date().toISOString().slice(0, 10);
+      const msgCount = await db.prepare('SELECT COUNT(*) as c FROM messages WHERE sender_id = ? AND date(created_at) = ?').bind(u.id, today).first();
+      if (msgCount && msgCount.c >= 10) return e('Daily limit reached. You can send 10 messages per day.', 400);
       const apiKey = env.MISTRAL_API_KEY;
       if (!apiKey) return e('AI chat not configured', 503);
+      await db.prepare('UPDATE users SET xp = xp - 20 WHERE id = ?').bind(u.id).run();
       const messages = bd.messages || [
         { role: 'system', content: bd.systemPrompt || 'You are a helpful coding tutor.' },
         { role: 'user', content: bd.message }
@@ -575,25 +580,13 @@ async function handleApi(request, env) {
       });
       const data = await response.json();
       if (data.choices && data.choices[0]) {
-        const openaiResponse = {
-          id: data.id,
-          object: 'chat.completion',
-          created: Math.floor(Date.now() / 1000),
-          model: data.model,
-          choices: data.choices.map(function(c) {
-            return {
-              index: c.index || 0,
-              message: { role: 'assistant', content: c.message.content },
-              finish_reason: c.finish_reason || 'stop'
-            };
-          }),
-          usage: data.usage
-        };
-        return j({ reply: data.choices[0].message.content, openai: openaiResponse });
+        return j({ reply: data.choices[0].message.content, xpCost: 20, remainingXp: (u.xp || 0) - 20 });
       }
       if (data.error) {
+        await db.prepare('UPDATE users SET xp = xp + 20 WHERE id = ?').bind(u.id).run();
         return j({ reply: 'Error: ' + data.error.message }, 500);
       }
+      await db.prepare('UPDATE users SET xp = xp + 20 WHERE id = ?').bind(u.id).run();
       return j({ reply: 'Sorry, I could not process your request.' });
     }
 
