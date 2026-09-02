@@ -136,7 +136,7 @@ async function handleApi(request, env) {
     }
 
     if (path.match(/^lessons\/\d+$/) && method === 'GET') {
-      const lesson = await db.prepare('SELECT * FROM lessons WHERE id = ? AND is_active = 1').bind(parseInt(path.split('/')[1])).first();
+      const lesson = await db.prepare('SELECT id, language, level_number, title, theory_text, code_example, challenge_type, challenge_description, challenge_template, xp_reward, difficulty, is_active FROM lessons WHERE id = ? AND is_active = 1').bind(parseInt(path.split('/')[1])).first();
       if (!lesson) return e('Not found', 404);
       return j({ lesson });
     }
