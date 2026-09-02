@@ -18,8 +18,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
 </head>
 <body>
-<div id="pageLoader">
-  <div class="loader-icon"><i class="fas fa-code"></i></div>
+
   <div class="loader-text">Loading lesson...</div>
 </div>
 
@@ -163,19 +162,6 @@ async function sendChat() {
   if (cm) cm.scrollTop = cm.scrollHeight;
 }
 </script>
-<script>
-(function() {
-  var loader = document.getElementById('pageLoader');
-  function hideLoader() {
-    if (loader) {
-      loader.classList.add('hidden');
-      setTimeout(function() { if (loader) loader.style.display = 'none'; }, 400);
-    }
-  }
-  if (document.readyState === 'complete') { hideLoader(); }
-  else { window.addEventListener('load', hideLoader); }
-  setTimeout(hideLoader, 2000);
-})();
-</script>
+
 </body>
 </html>

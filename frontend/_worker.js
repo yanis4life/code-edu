@@ -5,9 +5,10 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const country = request.headers.get('CF-IPCountry') || '';
-    const blockedCountries = ['KP', 'IR', 'CU', 'SY', 'MM'];
-    if (blockedCountries.includes(country)) {
-      return new Response('Access denied', { status: 403 });
+    const isTor = country === 'T1';
+    const isProxy = request.cf && request.cf.threat_score > 0;
+    if (isTor || isProxy) {
+      return new Response('VPN usage is not allowed. Disable your VPN to access this site.', { status: 403 });
     }
     if (url.pathname.startsWith('/api/')) {
       return handleApi(request, env);
@@ -31,9 +32,10 @@ async function handleApi(request, env) {
   const db = env.DB;
 
   const country = request.headers.get('CF-IPCountry') || '';
-  const blockedCountries = ['KP', 'IR', 'CU', 'SY', 'MM'];
-  if (blockedCountries.includes(country)) {
-    return new Response('Access denied', { status: 403, headers: { 'Content-Type': 'text/plain' } });
+  const isTor = country === 'T1';
+  const isProxy = request.cf && request.cf.threat_score > 0;
+  if (isTor || isProxy) {
+    return new Response('VPN usage is not allowed. Disable your VPN to access this site.', { status: 403, headers: { 'Content-Type': 'text/plain' } });
   }
 
   const c = {
