@@ -1,3 +1,14 @@
+function hidePageLoader() {
+  var loader = document.getElementById('pageLoader');
+  if (loader) {
+    loader.classList.add('hidden');
+    setTimeout(function() { if (loader) loader.style.display = 'none'; }, 400);
+  }
+}
+if (document.readyState === 'complete') hidePageLoader();
+else window.addEventListener('load', hidePageLoader);
+setTimeout(hidePageLoader, 1500);
+
 function showToast(message, type = 'info') {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
