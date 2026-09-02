@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tickets - CodeEdu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="viewport">
+  <div class="shell">
+    <nav class="nav">
+      <a href="/" class="nav-logo" id="logoLink">
+        <div class="logo-box">C</div>
+        <span>CodeEdu</span>
+      </a>
+      <div class="nav-pill">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/tickets" class="active">Support</a>
+      </div>
+      <div class="nav-right" id="userMenu" style="display:none">
+        <a href="/profile" class="nav-logo" style="font-size:0.9rem">
+          <img class="user-menu-avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover" src="">
+          <span class="user-menu-name"></span>
+        </a>
+        <button id="logoutBtn" class="glass-btn" style="padding:0.4rem 0.75rem;font-size:0.7rem">Logout</button>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="/dashboard" onclick="toggleMenu()">Dashboard</a>
+      <a href="/tickets" onclick="toggleMenu()">Support</a>
+      <a href="/profile" onclick="toggleMenu()">Profile</a>
+      <a href="/settings" onclick="toggleMenu()">Settings</a>
+      <div class="mobile-user" id="mobileUser" style="display:none">
+        <img class="user-menu-avatar" src="">
+        <span class="user-menu-name"></span>
+      </div>
+    </div>
+    <section class="section">
+      <div class="section-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div class="section-label">Support</div>
+          <h2 class="section-title">Tickets</h2>
+        </div>
+        <button class="neon-btn" onclick="showNewTicket()"><i class="fas fa-plus"></i> New Ticket</button>
+      </div>
+      <div id="newTicketForm" style="display:none;margin-bottom:2rem">
+        <div class="bento-card">
+          <div class="bento-title" style="margin-bottom:1rem">Create Ticket</div>
+          <form id="ticketForm">
+            <div class="form-group">
+              <label class="form-label">Subject</label>
+              <input type="text" id="ticketSubject" class="form-input" placeholder="Brief title" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea id="ticketMessage" class="form-input" style="min-height:120px;resize:vertical" placeholder="Describe your issue..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Priority</label>
+              <select id="ticketPriority" class="form-input">
+                <option value="low">Low</option>
+                <option value="normal" selected>Normal</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+              <button type="submit" class="neon-btn">Submit</button>
+              <button type="button" class="glass-btn" onclick="hideNewTicket()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div id="ticketsContent"><div class="loading-spinner" style="margin:3rem auto"></div></div>
+    </section>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+async function loadTickets() {
+  const container = document.getElementById('ticketsContent');
+  if (!container) return;
+  if (!api.isAuthenticated()) { window.location.href = '/login'; return; }
+  try {
+    container.innerHTML = '<div class="loading-spinner" style="margin:3rem auto"></div>';
+    const data = await api.get('/tickets');
+    container.innerHTML = '';
+    const user = api.getCurrentUser();
+    if (!data.tickets || data.tickets.length === 0) {
+      container.innerHTML = '<div class="bento-card" style="text-align:center;padding:3rem"><div class="bento-icon" style="font-size:2rem;margin-bottom:1rem"><i class="fas fa-ticket"></i></div><div class="bento-title" style="font-size:1.2rem;margin-bottom:0.5rem">No Tickets</div><div class="bento-desc">Create a ticket to get support.</div></div>';
+      return;
+    }
+    data.tickets.forEach(t => {
+      const isAdmin = user && user.role === 'admin';
+      const card = document.createElement('div');
+      card.className = 'bento-card';
+      card.style.cssText = 'margin-bottom:0.75rem;padding:1rem 1.25rem';
+      const statusColors = { open: '#ffffff', replied: '#888888', approved: '#00cc66', denied: '#ff4444' };
+      const sc = statusColors[t.status] || '#ffffff';
+      card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem"><div><div class="bento-title" style="font-size:0.95rem;margin-bottom:0.25rem">' + t.subject + '</div><div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted)">by ' + (t.username || 'you') + ' - ' + (t.created_at || '').slice(0, 10) + '</div></div><div style="display:flex;gap:0.5rem;align-items:center"><span class="badge" style="background:rgba(255,255,255,0.1);color:' + sc + ';border:1px solid ' + sc + '">' + t.status + '</span><span class="badge badge-muted">' + t.priority + '</span></div></div><div class="bento-desc" style="margin-bottom:0.5rem;font-size:0.8rem">' + t.message.slice(0, 200) + (t.message.length > 200 ? '...' : '') + '</div>' + (t.admin_reply ? '<div style="padding:0.5rem 0.75rem;background:var(--glass-bg);border-radius:var(--radius-sm);margin-bottom:0.5rem;border-left:2px solid #ffffff"><div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-bottom:0.25rem">Admin Reply:</div><div class="bento-desc" style="font-size:0.8rem">' + t.admin_reply + '</div></div>' : '') + (isAdmin && t.status === 'open' ? '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem"><button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem" onclick="showReply(' + t.id + ')">Reply</button><button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem;border-color:#00cc66;color:#00cc66" onclick="approveTicket(' + t.id + ')">Approve</button><button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem;border-color:#ff4444;color:#ff4444" onclick="denyTicket(' + t.id + ')">Deny</button></div>' : '') + (isAdmin && t.status === 'replied' ? '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem"><button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem;border-color:#00cc66;color:#00cc66" onclick="approveTicket(' + t.id + ')">Approve</button><button class="glass-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem;border-color:#ff4444;color:#ff4444" onclick="denyTicket(' + t.id + ')">Deny</button></div>' : '') + '<div id="replyForm_' + t.id + '" style="display:none;margin-top:0.75rem"><textarea id="replyText_' + t.id + '" class="form-input" style="min-height:60px;font-size:0.8rem" placeholder="Type your reply..."></textarea><button class="neon-btn" style="margin-top:0.5rem;font-size:0.7rem;padding:0.3rem 0.75rem" onclick="submitReply(' + t.id + ')">Send Reply</button></div>';
+      container.appendChild(card);
+    });
+  } catch (err) {
+    container.innerHTML = '<div class="bento-card" style="text-align:center;padding:2rem"><div class="bento-desc">' + err.message + '</div></div>';
+  }
+}
+
+function showNewTicket() {
+  document.getElementById('newTicketForm').style.display = 'block';
+  document.getElementById('newTicketForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideNewTicket() {
+  document.getElementById('newTicketForm').style.display = 'none';
+  document.getElementById('ticketForm').reset();
+}
+
+document.getElementById('ticketForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  try {
+    await api.post('/tickets', {
+      subject: document.getElementById('ticketSubject').value,
+      message: document.getElementById('ticketMessage').value,
+      priority: document.getElementById('ticketPriority').value
+    });
+    showToast('Ticket created', 'success');
+    hideNewTicket();
+    loadTickets();
+  } catch (err) { showToast(err.message, 'error'); }
+});
+
+function showReply(id) {
+  const form = document.getElementById('replyForm_' + id);
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitReply(id) {
+  const text = document.getElementById('replyText_' + id).value;
+  if (!text) return;
+  try {
+    await api.post('/tickets/' + id + '/reply', { reply: text });
+    showToast('Reply sent', 'success');
+    loadTickets();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function approveTicket(id) {
+  try {
+    await api.post('/tickets/' + id + '/approve');
+    showToast('Ticket approved', 'success');
+    loadTickets();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function denyTicket(id) {
+  try {
+    await api.post('/tickets/' + id + '/deny');
+    showToast('Ticket denied', 'success');
+    loadTickets();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadTheme();
+  initAuth();
+  loadTickets();
+});
+</script>
+</body>
+</html>

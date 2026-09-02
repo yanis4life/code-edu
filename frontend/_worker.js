@@ -486,7 +486,58 @@ async function handleApi(request, env) {
       return j({ message: 'Deployed', liveUrl: liveUrl, deploymentId: deployId });
     }
 
-        return e('Not found', 404);
+
+    if (path === 'tickets' && method === 'GET') {
+      const u = await auth(); if (!u) return e('Unauthorized', 401);
+      if (u.role === 'admin') {
+        const tickets = await db.prepare('SELECT t.*, u2.username FROM tickets t LEFT JOIN users u2 ON t.user_id = u2.id ORDER BY t.created_at DESC LIMIT 50').all();
+        return j({ tickets: tickets.results });
+      }
+      const tickets = await db.prepare('SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC LIMIT 50').bind(u.id).all();
+      return j({ tickets: tickets.results });
+    }
+
+    if (path === 'tickets' && method === 'POST') {
+      const u = await auth(); if (!u) return e('Unauthorized', 401);
+      const bd = await request.json();
+      if (!bd.subject || !bd.message) return e('Subject and message required');
+      await db.prepare('INSERT INTO tickets (user_id, subject, message, priority) VALUES (?, ?, ?, ?)').bind(u.id, bd.subject, bd.message, bd.priority || 'normal').run();
+      return j({ message: 'Ticket created' }, 201);
+    }
+
+    if (path.match(/^tickets\/\d+$/) && method === 'GET') {
+      const u = await auth(); if (!u) return e('Unauthorized', 401);
+      const tid = parseInt(path.split('/')[1]);
+      const t = await db.prepare('SELECT t.*, u2.username FROM tickets t LEFT JOIN users u2 ON t.user_id = u2.id WHERE t.id = ?').bind(tid).first();
+      if (!t) return e('Not found', 404);
+      if (t.user_id !== u.id && u.role !== 'admin') return e('Forbidden', 403);
+      return j({ ticket: t });
+    }
+
+    if (path.match(/^tickets\/\d+\/reply$/) && method === 'POST') {
+      const u = await auth(); if (!u || u.role !== 'admin') return e('Forbidden', 403);
+      const tid = parseInt(path.split('/')[1]);
+      const bd = await request.json();
+      if (!bd.reply) return e('Reply required');
+      await db.prepare('UPDATE tickets SET admin_reply = ?, status = \'replied\', replied_at = CURRENT_TIMESTAMP WHERE id = ?').bind(bd.reply, tid).run();
+      return j({ message: 'Replied' });
+    }
+
+    if (path.match(/^tickets\/\d+\/approve$/) && method === 'POST') {
+      const u = await auth(); if (!u || u.role !== 'admin') return e('Forbidden', 403);
+      const tid = parseInt(path.split('/')[1]);
+      await db.prepare('UPDATE tickets SET status = \'approved\', replied_at = CURRENT_TIMESTAMP WHERE id = ?').bind(tid).run();
+      return j({ message: 'Approved' });
+    }
+
+    if (path.match(/^tickets\/\d+\/deny$/) && method === 'POST') {
+      const u = await auth(); if (!u || u.role !== 'admin') return e('Forbidden', 403);
+      const tid = parseInt(path.split('/')[1]);
+      await db.prepare('UPDATE tickets SET status = \'denied\', replied_at = CURRENT_TIMESTAMP WHERE id = ?').bind(tid).run();
+      return j({ message: 'Denied' });
+    }
+
+            return e('Not found', 404);
   } catch (err) {
     return e(err.message, 500);
   }
