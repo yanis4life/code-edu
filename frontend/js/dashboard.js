@@ -184,6 +184,14 @@ async function loadLanguageLevels(language) {
   }
 }
 
+function hideLoader() {
+  var loader = document.getElementById('pageLoader');
+  if (loader) {
+    loader.classList.add('hidden');
+    setTimeout(function() { if (loader) loader.style.display = 'none'; }, 400);
+  }
+}
+
 async function loadLessonDetail() {
   const container = document.getElementById('lessonContent');
   if (!container) return;
@@ -192,11 +200,13 @@ async function loadLessonDetail() {
   const mode = new URLSearchParams(window.location.search).get('mode') || 'learn';
   if (!lessonId) {
     container.innerHTML = '<div class="bento-card" style="text-align:center;padding:3rem"><div class="bento-desc">No lesson specified</div></div>';
+    hideLoader();
     return;
   }
 
   try {
     container.innerHTML = '<div class="loading-spinner" style="margin:3rem auto"></div>';
+    hideLoader();
 
     const data = await api.get('/lessons/' + lessonId);
     const lesson = data.lesson;
@@ -208,6 +218,7 @@ async function loadLessonDetail() {
     }
   } catch (err) {
     container.innerHTML = '<div class="bento-card" style="text-align:center;padding:3rem"><div class="bento-desc">Failed to load lesson: ' + err.message + '</div></div>';
+    hideLoader();
   }
 }
 
