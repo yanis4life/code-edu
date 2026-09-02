@@ -13,43 +13,12 @@
 #codeEditor { tab-size: 2; }
 #codeEditor:focus { border-color: var(--accent-lime); }
 </style><style>
-@keyframes loadingPulse {
-  0% { opacity: 0.3; }
-  50% { opacity: 1; }
-  100% { opacity: 0.3; }
-}
-#pageLoader {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-viewport);
-  transition: opacity 0.5s ease;
-}
-#pageLoader.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-#pageLoader .loader-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  animation: loadingPulse 1.5s infinite;
-}
-#pageLoader .loader-text {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-</style><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
 </head>
 <body>
-<div id="pageLoader">
-  <div class="loader-icon"><i class="fas fa-code"></i></div>
+
   <div class="loader-text">Loading lesson...</div>
 </div>
 <div class="viewport">
@@ -148,13 +117,13 @@ async function sendChat() {
   messages.scrollTop = messages.scrollHeight;
   try {
     var lessonId = new URLSearchParams(window.location.search).get('id');
-    var systemPrompt = 'You are a coding tutor on CodeEdu platform. Help users learn programming.';
+    var systemPrompt = 'You are a coding tutor on CodeEdu platform. Guide users to solve challenges themselves. Do NOT give direct answers or code solutions. Explain concepts, give hints, and point them in the right direction.';
     if (lessonId) {
       try {
         var lessonData = await api.get('/lessons/' + lessonId);
         if (lessonData && lessonData.lesson) {
           var l = lessonData.lesson;
-          systemPrompt = 'You are a coding tutor. User is on level ' + l.level_number + ' of ' + l.language + ' titled \"' + l.title + '\". Topic: ' + (l.theory_text || '').slice(0, 200) + '. Help them understand and complete the challenge. Be concise.';
+          systemPrompt = 'You are a coding tutor. User is on level ' + l.level_number + ' of ' + l.language + ' titled \"' + l.title + '\". Topic: ' + (l.theory_text || '').slice(0, 200) + '. Guide them to solve it themselves. Explain concepts and give hints, but do NOT provide direct answers or complete code solutions.';
         }
       } catch(e) {}
     }
