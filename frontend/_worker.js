@@ -4,6 +4,11 @@ const JWT_REFRESH_SECRET = 'code-edu-refresh-secret';
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const country = request.headers.get('CF-IPCountry') || '';
+    const blockedCountries = ['KP', 'IR', 'CU', 'SY', 'MM'];
+    if (blockedCountries.includes(country)) {
+      return new Response('Access denied', { status: 403 });
+    }
     if (url.pathname.startsWith('/api/')) {
       return handleApi(request, env);
     }
@@ -24,6 +29,12 @@ async function handleApi(request, env) {
   const path = url.pathname.replace(/^\/api\/v1\//, '');
   const method = request.method;
   const db = env.DB;
+
+  const country = request.headers.get('CF-IPCountry') || '';
+  const blockedCountries = ['KP', 'IR', 'CU', 'SY', 'MM'];
+  if (blockedCountries.includes(country)) {
+    return new Response('Access denied', { status: 403, headers: { 'Content-Type': 'text/plain' } });
+  }
 
   const c = {
     'Content-Type': 'application/json',
