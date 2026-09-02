@@ -90,7 +90,7 @@ async function loadContests() {
     contestsGrid.className = 'bento-grid';
 
     data.contests.forEach(contest => {
-      const statusColor = contest.status === 'active' ? 'var(--accent-emerald)' : contest.status === 'upcoming' ? '#00BCD4' : 'var(--text-muted)';
+      const statusColor = contest.status === 'active' ? 'var(--accent-emerald)' : contest.status === 'upcoming' ? '#000000' : 'var(--text-muted)';
       const card = document.createElement('div');
       card.className = 'bento-card';
       card.innerHTML = `
