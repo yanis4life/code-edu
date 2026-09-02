@@ -212,6 +212,7 @@ async function loadLessonDetail() {
 }
 
 function loadLearnView(container, lesson) {
+  container.innerHTML = '';
   const backLink = document.createElement('a');
   backLink.href = '/lessons?language=' + lesson.language;
   backLink.className = 'glass-btn';
@@ -232,6 +233,7 @@ function loadLearnView(container, lesson) {
 }
 
 function loadPracticeView(container, lesson) {
+  container.innerHTML = '';
   const backLink = document.createElement('a');
   backLink.href = '/lesson?id=' + lesson.id + '&mode=learn';
   backLink.className = 'glass-btn';
