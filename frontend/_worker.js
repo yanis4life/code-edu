@@ -541,25 +541,42 @@ async function handleApi(request, env) {
     if (path === 'chat' && method === 'POST') {
       const u = await auth(); if (!u) return e('Unauthorized', 401);
       const bd = await request.json();
-      if (!bd.message) return e('Message required');
-      const apiKey = env.OPENAI_API_KEY;
-      if (!apiKey) return e('AI chat not configured. Set OPENAI_API_KEY in env vars.', 503);
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      if (!bd.messages && !bd.message) return e('Messages or message required');
+      const apiKey = env.MISTRAL_API_KEY;
+      if (!apiKey) return e('AI chat not configured', 503);
+      const messages = bd.messages || [
+        { role: 'system', content: bd.systemPrompt || 'You are a helpful coding tutor.' },
+        { role: 'user', content: bd.message }
+      ];
+      const model = bd.model || 'mistral-small-latest';
+      const mistralModel = model.includes('mistral') ? model : 'mistral-small-latest';
+      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
         body: JSON.stringify({
-          model: bd.model || 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: bd.systemPrompt || 'You are a helpful coding tutor on CodeEdu platform. Help users learn programming concepts and complete challenges.' },
-            { role: 'user', content: bd.message }
-          ],
-          max_tokens: bd.maxTokens || 500,
+          model: mistralModel,
+          messages: messages,
+          max_tokens: bd.max_tokens || bd.maxTokens || 500,
           temperature: bd.temperature || 0.7
         })
       });
       const data = await response.json();
       if (data.choices && data.choices[0]) {
-        return j({ reply: data.choices[0].message.content, model: data.model, usage: data.usage });
+        const openaiResponse = {
+          id: data.id,
+          object: 'chat.completion',
+          created: Math.floor(Date.now() / 1000),
+          model: data.model,
+          choices: data.choices.map(function(c) {
+            return {
+              index: c.index || 0,
+              message: { role: 'assistant', content: c.message.content },
+              finish_reason: c.finish_reason || 'stop'
+            };
+          }),
+          usage: data.usage
+        };
+        return j({ reply: data.choices[0].message.content, openai: openaiResponse });
       }
       if (data.error) {
         return j({ reply: 'Error: ' + data.error.message }, 500);

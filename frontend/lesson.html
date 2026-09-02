@@ -160,7 +160,7 @@ async function sendChat() {
     var res = await fetch('/api/v1/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ message: msg, systemPrompt: systemPrompt })
+      body: JSON.stringify({ messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: msg }] })
     });
     var data = await res.json();
     if (messages.lastChild) messages.removeChild(messages.lastChild);
