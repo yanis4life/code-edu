@@ -542,23 +542,27 @@ async function handleApi(request, env) {
       const u = await auth(); if (!u) return e('Unauthorized', 401);
       const bd = await request.json();
       if (!bd.message) return e('Message required');
-      const apiKey = env.MISTRAL_API_KEY;
-      if (!apiKey) return e('AI chat not configured', 503);
-      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      const apiKey = env.OPENAI_API_KEY;
+      if (!apiKey) return e('AI chat not configured. Set OPENAI_API_KEY in env vars.', 503);
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
         body: JSON.stringify({
-          model: 'mistral-small-latest',
+          model: bd.model || 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: bd.systemPrompt || 'You are a helpful coding tutor.' },
+            { role: 'system', content: bd.systemPrompt || 'You are a helpful coding tutor on CodeEdu platform. Help users learn programming concepts and complete challenges.' },
             { role: 'user', content: bd.message }
           ],
-          max_tokens: 500
+          max_tokens: bd.maxTokens || 500,
+          temperature: bd.temperature || 0.7
         })
       });
       const data = await response.json();
       if (data.choices && data.choices[0]) {
-        return j({ reply: data.choices[0].message.content });
+        return j({ reply: data.choices[0].message.content, model: data.model, usage: data.usage });
+      }
+      if (data.error) {
+        return j({ reply: 'Error: ' + data.error.message }, 500);
       }
       return j({ reply: 'Sorry, I could not process your request.' });
     }
