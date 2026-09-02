@@ -43,7 +43,9 @@
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
-</style>
+</style><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
 </head>
 <body>
 <div id="pageLoader">
@@ -120,7 +122,7 @@ setTimeout(function() {
       <span onclick="toggleChat()" style="cursor:pointer;color:var(--text-muted);font-size:0.85rem"><i class="fas fa-times"></i></span>
     </div>
     <div id="chatMessages" style="height:300px;overflow-y:auto;padding:0.75rem;display:flex;flex-direction:column;gap:0.5rem">
-      <div style="padding:0.5rem 0.75rem;background:var(--glass-bg);border-radius:var(--radius-sm);font-size:0.8rem;align-self:flex-start;max-width:85%">Hi! I'm your AI tutor. Ask me anything about this lesson.</div>
+      <div style="padding:0.5rem 0.75rem;background:var(--glass-bg);border-radius:var(--radius-sm);font-size:0.8rem;align-self:flex-start;max-width:85%">Hi! I'm your AI tutor. Ask me anything about this lesson. I can explain concepts with code examples.</div>
     </div>
     <div style="padding:0.5rem;border-top:1px solid var(--glass-border);display:flex;gap:0.5rem">
       <input type="text" id="chatInput" class="form-input" style="font-size:0.8rem;padding:0.5rem 0.75rem" placeholder="Ask a question..." onkeydown="if(event.key==='Enter') sendChat()">
@@ -165,7 +167,17 @@ async function sendChat() {
     var data = await res.json();
     if (messages.lastChild) messages.removeChild(messages.lastChild);
     if (data.reply) {
-      messages.innerHTML += '<div style="padding:0.5rem 0.75rem;background:var(--glass-bg);border-radius:var(--radius-sm);font-size:0.8rem;align-self:flex-start;max-width:85%">' + data.reply.replace(/</g, '&lt;').replace(/\n/g, '<br>') + '</div>';
+      var mdDiv = document.createElement('div');
+      mdDiv.style.cssText = 'padding:0.5rem 0.75rem;background:var(--glass-bg);border-radius:var(--radius-sm);font-size:0.8rem;align-self:flex-start;max-width:85%;overflow-x:auto';
+      if (typeof marked !== 'undefined') {
+        mdDiv.innerHTML = marked.parse(data.reply);
+        mdDiv.querySelectorAll('pre code').forEach(function(block) {
+          if (typeof hljs !== 'undefined') hljs.highlightElement(block);
+        });
+      } else {
+        mdDiv.innerHTML = data.reply.replace(/</g, '&lt;').replace(/\n/g, '<br>');
+      }
+      messages.appendChild(mdDiv);
     } else {
       messages.innerHTML += '<div style="padding:0.5rem 0.75rem;background:var(--glass-bg);border-radius:var(--radius-sm);font-size:0.8rem;align-self:flex-start;max-width:85%;color:#ff4444">Error: ' + (data.error || 'No response') + '</div>';
     }
